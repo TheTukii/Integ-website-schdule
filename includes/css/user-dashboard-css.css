@@ -1,7 +1,7 @@
 body {
     margin: 0;
     height: 100vh;
-    background-color:#F7FAFD;
+    background-color:#ffffff;
 }
 
 .layout {
@@ -27,6 +27,12 @@ body {
     width: 50rem;
 }
 
+.card {
+    margin: 0%;
+    height: 50px;
+    width: 300px;
+}
+
 .card-dashboard {
     margin: 0%;
     width: 23rem;
@@ -41,13 +47,14 @@ body {
 
 .card-dashboard-sidebar-left {
     margin: 0%;
-    width: 23rem;
+    width: 20rem;
     height: 50rem;
-    background-color: #000000;
-    display: flex; 
+    background-color: #EBF3FB;
+    display: flex;  
     justify-content: left; 
     border-radius: 15px;
     margin-left: .5rem;
+    border: solid 1.5px #042C53
 
 }
 
@@ -55,22 +62,23 @@ body {
     margin: 0%;
     width: 23rem;
     height: 50rem;
-    background-color: #000000;
+    background-color: #EBF3FB;
     display: flex; 
     justify-content: left; 
     border-radius: 15px;
     margin-right: .5rem;
+    border: solid 1.5px #042C53
 
 }
 
 .card-dashboard-topbar {
     margin: 0%;
-    width: 117rem;
+    width: 118rem;
     height: 6rem;
-    background-color: #000000;
+    background-color: #EBF3FB;
     display: flex; 
-    border-radius: 5px;
-    align-items: center;
+    border-radius: 15px;
+    border: solid 1.5px #042C53
 }
 
 .buksu-map {
