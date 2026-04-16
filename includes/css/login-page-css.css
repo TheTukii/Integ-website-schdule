@@ -1,0 +1,47 @@
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color:#F7FAFD;;
+}
+
+.card-login {
+    margin: 0%;
+    width: 23rem;
+    height: 35rem;
+    background-color: #ffffff;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    border-radius: 5px;
+
+}
+
+.input-email {
+    border-radius: 5px; 
+    width: 15rem; 
+    height: 2.5rem; 
+    border-color: #95989b;
+}
+
+.input-password {
+    border-radius: 5px; 
+    width: 15rem; 
+    height: 2.5rem; 
+    border-style: solid;
+    border-color: #0B1C2E;
+}
+
+.card-side {
+    margin: 0%;
+    width: 40rem;
+    height: 35rem;
+    background-color: #0B1C2E;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    border-radius: 5px;
+
+}
