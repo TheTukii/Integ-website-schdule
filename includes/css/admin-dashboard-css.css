@@ -1,0 +1,89 @@
+body {
+    margin: 0;
+    height: 100vh;
+    background-color:#ffffff;
+}
+
+.layout {
+    display: flex;
+    height: 85vh;
+    align-items: center;
+}
+
+.layout-top {
+    display: flex;
+    align-items: center;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.buksu-map img {
+    height: 50rem;
+    width: 50rem;
+}
+
+.card {
+    margin: 0%;
+    height: 50px;
+    width: 300px;
+}
+
+.card-dashboard {
+    margin: 0%;
+    width: 23rem;
+    height: 35rem;
+    background-color: #ffffff;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    border-radius: 5px;
+
+}
+
+.card-dashboard-sidebar-left {
+    margin: 0%;
+    width: 20rem;
+    height: 50rem;
+    background-color: #EBF3FB;
+    display: flex;  
+    justify-content: left; 
+    border-radius: 15px;
+    margin-left: .5rem;
+    border: solid 1.5px #042C53
+
+}
+
+.card-dashboard-sidebar-right {
+    margin: 0%;
+    width: 23rem;
+    height: 50rem;
+    background-color: #EBF3FB;
+    display: flex; 
+    justify-content: left; 
+    border-radius: 15px;
+    margin-right: .5rem;
+    border: solid 1.5px #042C53
+
+}
+
+.card-dashboard-topbar {
+    margin: 0%;
+    width: 118rem;
+    height: 6rem;
+    background-color: #EBF3FB;
+    display: flex; 
+    border-radius: 15px;
+    border: solid 1.5px #042C53
+}
+
+.buksu-map {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
