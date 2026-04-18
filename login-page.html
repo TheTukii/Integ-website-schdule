@@ -2,49 +2,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/includes/css/login-page-css.css">
-        <title>Log in</title>
+    <title>Log in</title>
 </head>
 
 <body>
-    <div class="page-container">
-        <div class="card-side">
-            <div>
-                <img class="welcome-image" src="/includes/img/Welcome_Classroom.png" alt="Welcome Classroom graphic">
-            </div>
-        </div>
 
-        <div class="Inner">
-        <div class="card-login">
-            <div>
-                <div class="text-center" style="margin-bottom: 0.3rem;">
-                    <img class="login-logo" src="/includes/img/Logov2.png" alt="Classroom Finder logo" />
-                </div>
-                <div>
-                    <div style="display: flex; justify-content: center;">
-                        <h3 class="mb-0" style="color: #042C53; margin-bottom: 0.2rem;">Log in</h3>
-                    </div>
-                    <div>
-                        <input type="text" class="input-email" style="margin-bottom: 0.4rem;" input="email" placeholder="Email">
-                    </div>
+<div class="page-container">
 
-                    <div>
-                        <input type="text" class="input-password mt-2" input="email" placeholder="Password">
-                    </div>
-
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
-                        <form action="user-dashboard.html">
-                            <button type="submit" class="btn btn-success mt-3" style="width: 100%; max-width: 12rem;">Log in</button>
-                        </form>
-                        <a href="register-page.html" class="btn btn-outline-primary" style="width: 100%; max-width: 12rem;">Register</a>
-                    </div>
-                </div>
-            </div>
+    <div class="card-side">
+        <div>
+            <img class="welcome-image" src="/includes/img/Welcome_Classroom.png">
         </div>
     </div>
 
+    <div class="Inner">
+
+        <div class="card-login">
+
+            <div>
+
+                <div class="text-center">
+                    <img class="login-logo" src="/includes/img/Logov2.png">
+                </div>
+
+                <div class="text-center">
+                    <h3 style="color:#042C53;">Log in</h3>
+                </div>
+
+                <!-- FORM -->
+                <form id="loginForm">
+
+                    <input type="text" id="email" class="input-email" placeholder="Email">
+
+                    <input type="password" id="password" class="input-password mt-2" placeholder="Password">
+
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:0.75rem; margin-top:1rem;">
+
+                        <button type="submit" class="btn btn-success" style="width: 12rem;">
+                            Log in
+                        </button>
+
+                        <a href="register-page.html" class="btn btn-outline-primary" style="width: 12rem;">
+                            Register
+                        </a>
+
+                        <a href="forgot-password-email-input-page.html" style="font-size: 0.95rem; color:#0d6efd;">
+                            Forgot password?
+                        </a>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- VALIDATION SCRIPT -->
+<script>
+document.getElementById("loginForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    let email = document.getElementById("email").value.trim();
+    let password = document.getElementById("password").value.trim();
+
+    if (email === "" || password === "") {
+        alert("Please fill in both email and password!");
+        return;
+    }
+
+    // if valid → go to dashboard
+    window.location.href = "user-dashboard.html";
+});
+</script>
 
 </body>
 </html>
