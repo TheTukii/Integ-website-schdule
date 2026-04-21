@@ -1,93 +1,190 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link rel="stylesheet" href="/includes/css/user-dashboard-css.css">
-    <title>Dashboard</title>
-    
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BukSU — Classroom Finder</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/includes/css/user-dashboard-css.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 </head>
-
-
-
 <body>
 
-    <div class="layout-top">
-        <div class="main">
-            <div class="card-dashboard-topbar">
-                <div class="container text-center">
-                    <div class="row align-items-start">
-                        <div class="col">
-                        One of three columns
-                        </div>
-                        <div class="col">
-                        One of three columns
-                        </div>
-                        <div class="col">
-                        One of three columns
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <a class="topbar-brand" href="#">
+      <div class="logo-mark">Bu</div>
+      BukSU Rooms
+    </a>
+
+    <div class="topbar-stats">
+      <div class="stat-chip">
+        <span class="dot dot-green"></span>
+        <strong>42</strong> Available
+      </div>
+      <div class="stat-chip">
+        <span class="dot dot-amber"></span>
+        <strong>18</strong> Occupied
+      </div>
+      <div class="stat-chip">
+        <span class="dot dot-blue"></span>
+        <strong>9</strong> Reserved
+      </div>
     </div>
 
-    <div class="layout">
-        <div class="card-dashboard-sidebar-left">
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9rem; width: 100%;">
-                <div> 
-                    <h5 style="color: #042C53; text-transform: uppercase;">Navigation</h5>
-                    <button class="card" style="display: flex; align-items: center; justify-content: center;">
-                        Dashboard
-                    </button>
-                    <button class="card" style="display: flex; align-items: center; justify-content: center;">
-                        Classroom Finder
-                    </button>
-                    <button class="card" style="display: flex; align-items: center; justify-content: center;">
-                        My Schedules
-                    </button>
-                </div>
-                <div> System
-                    <button class="card" style="display: flex; align-items: center; justify-content: center;">
-                        Settings
-                    </button>
-                </div>
-
-                <div> 
-                    Profile
-                    <div>
-                        <card class="card" style="height: 100px; display: flex; align-items: center; justify-content: center;">
-                        <div>
-
-                        </div>
-                        </card>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="main">
-            <div class="buksu-map">
-                <img src="/includes/img/buksu-map.png" alt="">
-            </div>
-        </div>
-
-        <div class="card-dashboard-sidebar-right">
-            <div">
-                <div>
-                    Hello
-                </div>
-                <div>
-                    hello
-                </div>
-                <div>
-                    hello
-                </div>
-            </div>
-        </div>
+    <div class="topbar-user">
+      <div class="user-meta">
+        <div class="name">Juan dela Cruz</div>
+        <div class="role">BSCS — 3rd Year</div>
+      </div>
+      <div class="avatar">JD</div>
     </div>
+  </header>
+
+  <!-- BODY -->
+  <div class="body-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-left">
+      <div>
+        <p class="nav-section-label">Navigation</p>
+        <button class="nav-item active">
+          <i class="bi bi-speedometer2 nav-icon"></i>
+          Dashboard
+        </button>
+        <button class="nav-item">
+          <i class="bi bi-search nav-icon"></i>
+          Classroom Finder
+        </button>
+        <button class="nav-item">
+          <i class="bi bi-calendar3 nav-icon"></i>
+          My Schedules
+        </button>
+      </div>
+
+      <div>
+        <p class="nav-section-label">System</p>
+        <button class="nav-item">
+          <i class="bi bi-gear nav-icon"></i>
+          Settings
+        </button>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+
+      <!-- Profile mini-card -->
+      <div class="profile-card">
+        <div class="profile-card-top">
+          <div class="avatar">JD</div>
+          <div>
+            <div class="name">Juan dela Cruz</div>
+            <div class="id">2021-00142</div>
+          </div>
+        </div>
+        <span class="badge">Student — BSCS</span>
+      </div>
+    </aside>
+
+    <!-- MAIN MAP AREA -->
+    <main class="main-content">
+      <div class="map-container">
+        <span class="map-label">BukSU Campus Map</span>
+        <!-- Replace with your actual map image: -->
+        <div class="map-placeholder">
+          <i class="bi bi-map" style="font-size: 4rem; color: var(--navy); opacity: 0.2;"></i>
+          <p>Map image loads here</p>
+          <p>Replace src below with <code>/includes/img/buksu-map.png</code></p>
+        </div>
+        <!-- Uncomment when image is available:
+        <img src="/includes/img/buksu-map.png" alt="BukSU Campus Map"> -->
+      </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="sidebar-right">
+
+      <!-- Search -->
+      <div>
+        <p class="panel-title">Find a room</p>
+        <div class="search-box">
+          <i class="bi bi-search" style="color: var(--muted); flex-shrink: 0;"></i>
+          <input type="text" placeholder="Room name or building…">
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Today's Schedule -->
+      <div>
+        <p class="panel-title">Today's schedule</p>
+        <div class="schedule-list">
+          <div class="schedule-item">
+            <span class="subj">CC 104 — Discrete Math</span>
+            <span class="meta">7:30 – 9:00 AM &nbsp;·&nbsp; MWF</span>
+            <span class="room-tag tag-blue">Room 212 — SciTech</span>
+          </div>
+          <div class="schedule-item">
+            <span class="subj">CC 106 — Data Structures</span>
+            <span class="meta">10:30 AM – 12:00 PM &nbsp;·&nbsp; TTh</span>
+            <span class="room-tag tag-green">Room 308 — ICT Bldg</span>
+          </div>
+          <div class="schedule-item">
+            <span class="subj">PE 2 — Badminton</span>
+            <span class="meta">1:00 – 2:30 PM &nbsp;·&nbsp; Sat</span>
+            <span class="room-tag tag-amber">Gymnasium</span>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Room Availability -->
+      <div>
+        <p class="panel-title">Nearby availability</p>
+        <div>
+          <div class="availability-row">
+            <span class="room-name">Room 201 — SciTech</span>
+            <div class="status-pair">
+              <div class="status-dot status-free"></div>
+              <span class="status-label">Free</span>
+            </div>
+          </div>
+          <div class="availability-row">
+            <span class="room-name">Room 212 — SciTech</span>
+            <div class="status-pair">
+              <div class="status-dot status-busy"></div>
+              <span class="status-label">Occupied</span>
+            </div>
+          </div>
+          <div class="availability-row">
+            <span class="room-name">Lab 101 — ICT Bldg</span>
+            <div class="status-pair">
+              <div class="status-dot status-free"></div>
+              <span class="status-label">Free</span>
+            </div>
+          </div>
+          <div class="availability-row">
+            <span class="room-name">Room 308 — ICT Bldg</span>
+            <div class="status-pair">
+              <div class="status-dot status-busy"></div>
+              <span class="status-label">Occupied</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Quick action -->
+      <button class="quick-btn">
+        <i class="bi bi-geo-alt"></i>
+        Request Room Reservation
+      </button>
+
+    </aside>
+  </div>
+
 </body>
-
 </html>
