@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BukSU — Settings</title>
+  <meta name="description" content="Manage your BukSU Classroom Finder account settings, profile, and preferences.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/includes/css/user-dashboard-css.css">
+  <link rel="stylesheet" href="/includes/css/user-settings-css.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <a class="topbar-brand" href="user-dashboard.html">
+      <div class="logo-mark">Bu</div>
+      BukSU Rooms
+    </a>
+
+    <div class="topbar-stats">
+      <div class="stat-chip">
+        <span class="dot dot-green"></span>
+        <strong>42</strong> Available
+      </div>
+      <div class="stat-chip">
+        <span class="dot dot-amber"></span>
+        <strong>18</strong> Occupied
+      </div>
+      <div class="stat-chip">
+        <span class="dot dot-blue"></span>
+        <strong>9</strong> Reserved
+      </div>
+    </div>
+
+    <div class="topbar-user">
+      <div class="user-meta">
+        <div class="name">Juan dela Cruz</div>
+        <div class="role">BSCS — 3rd Year</div>
+      </div>
+      <div class="avatar">JD</div>
+    </div>
+  </header>
+
+  <!-- BODY -->
+  <div class="body-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-left">
+      <div>
+        <p class="nav-section-label">Navigation</p>
+        <a href="user-dashboard.html" class="nav-item" style="text-decoration:none;">
+          <i class="bi bi-speedometer2 nav-icon"></i>
+          Dashboard
+        </a>
+        <a href="user-classroomfinder.html" class="nav-item" style="text-decoration:none;">
+          <i class="bi bi-search nav-icon"></i>
+          Classroom Finder
+        </a>
+        <a href="user-schedules.html" class="nav-item" style="text-decoration:none;">
+          <i class="bi bi-calendar3 nav-icon"></i>
+          My Schedules
+        </a>
+      </div>
+
+      <div>
+        <p class="nav-section-label">System</p>
+        <a href="user-settinngs.html" class="nav-item active" style="text-decoration:none;">
+          <i class="bi bi-gear nav-icon"></i>
+          Settings
+        </a>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+
+      <!-- Profile mini-card -->
+      <div class="profile-card">
+        <div class="profile-card-top">
+          <div class="avatar">JD</div>
+          <div>
+            <div class="name">Juan dela Cruz</div>
+            <div class="id">2021-00142</div>
+          </div>
+        </div>
+        <span class="badge">Student — BSCS</span>
+      </div>
+    </aside>
+
+    <!-- MAIN SETTINGS AREA -->
+    <main class="settings-content">
+
+      <!-- Page Header -->
+      <div class="settings-header">
+        <h1>Settings</h1>
+        <p>Manage your account, profile, and notification preferences</p>
+      </div>
+
+      <!-- ═══ PROFILE SECTION ═══ -->
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <i class="bi bi-person-circle"></i>
+          <h2>Profile Information</h2>
+        </div>
+
+        <div class="settings-avatar-row">
+          <div class="settings-avatar">JD</div>
+          <div class="settings-avatar-info">
+            <div class="name">Juan dela Cruz</div>
+            <div class="id">Student · 2021-00142</div>
+            <button class="upload-btn" id="uploadAvatarBtn">
+              <i class="bi bi-camera"></i>
+              Change photo
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-field">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" value="Juan" placeholder="First name">
+          </div>
+          <div class="settings-field">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" value="dela Cruz" placeholder="Last name">
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-field">
+            <label for="studentId">Student ID</label>
+            <input type="text" id="studentId" value="2021-00142" readonly>
+          </div>
+          <div class="settings-field">
+            <label for="program">Program</label>
+            <select id="program">
+              <option selected>BSCS — Computer Science</option>
+              <option>BSIT — Information Technology</option>
+              <option>BSA — Accountancy</option>
+              <option>BSEd — Education</option>
+              <option>BSBA — Business Administration</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-field">
+            <label for="yearLevel">Year Level</label>
+            <select id="yearLevel">
+              <option>1st Year</option>
+              <option>2nd Year</option>
+              <option selected>3rd Year</option>
+              <option>4th Year</option>
+            </select>
+          </div>
+          <div class="settings-field">
+            <label for="section">Section</label>
+            <input type="text" id="section" value="A" placeholder="Section">
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button class="btn-cancel" id="cancelProfileBtn">Cancel</button>
+          <button class="btn-save" id="saveProfileBtn">
+            <i class="bi bi-check2"></i>
+            Save changes
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══ ACCOUNT SECTION ═══ -->
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <i class="bi bi-shield-lock"></i>
+          <h2>Account & Security</h2>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-field">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" value="juandelacruz@buksu.edu.ph" placeholder="Email">
+          </div>
+          <div class="settings-field">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" value="" placeholder="09XX-XXX-XXXX">
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-field">
+            <label for="currentPassword">Current Password</label>
+            <input type="password" id="currentPassword" placeholder="Enter current password">
+          </div>
+          <div class="settings-field">
+            <label for="newPassword">New Password</label>
+            <input type="password" id="newPassword" placeholder="Enter new password">
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button class="btn-cancel" id="cancelAccountBtn">Cancel</button>
+          <button class="btn-save" id="saveAccountBtn">
+            <i class="bi bi-check2"></i>
+            Update account
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══ NOTIFICATIONS SECTION ═══ -->
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <i class="bi bi-bell"></i>
+          <h2>Notifications</h2>
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Schedule reminders</span>
+            <span class="toggle-desc">Get notified 15 minutes before your next class</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleSchedule" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Room availability alerts</span>
+            <span class="toggle-desc">Notify when a watched room becomes available</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleAvailability" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Reservation updates</span>
+            <span class="toggle-desc">Status changes for your room reservations</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleReservation">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Email notifications</span>
+            <span class="toggle-desc">Receive updates via email in addition to in-app</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleEmail">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ═══ DANGER ZONE ═══ -->
+      <div class="settings-card danger">
+        <div class="settings-card-header">
+          <i class="bi bi-exclamation-triangle"></i>
+          <h2>Danger Zone</h2>
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Log out of all devices</span>
+            <span class="toggle-desc">End all active sessions on other devices</span>
+          </div>
+          <button class="btn-danger" id="logoutAllBtn">
+            <i class="bi bi-box-arrow-right"></i>
+            Log out all
+          </button>
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Delete account</span>
+            <span class="toggle-desc">Permanently remove your account and all data</span>
+          </div>
+          <button class="btn-danger" id="deleteAccountBtn">
+            <i class="bi bi-trash3"></i>
+            Delete
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+<!-- SETTINGS INTERACTION SCRIPT -->
+<script>
+// Save profile
+document.getElementById('saveProfileBtn').addEventListener('click', function() {
+    alert('Profile settings saved successfully!');
+});
+
+// Save account
+document.getElementById('saveAccountBtn').addEventListener('click', function() {
+    const currentPass = document.getElementById('currentPassword').value.trim();
+    const newPass = document.getElementById('newPassword').value.trim();
+
+    if (newPass && !currentPass) {
+        alert('Please enter your current password to set a new one.');
+        return;
+    }
+    alert('Account settings updated successfully!');
+});
+
+// Cancel buttons
+document.querySelectorAll('.btn-cancel').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        if (confirm('Discard unsaved changes?')) {
+            window.location.reload();
+        }
+    });
+});
+
+// Danger zone
+document.getElementById('logoutAllBtn').addEventListener('click', function() {
+    if (confirm('Log out of all devices? You will need to sign in again.')) {
+        alert('All sessions ended.');
+    }
+});
+
+document.getElementById('deleteAccountBtn').addEventListener('click', function() {
+    if (confirm('Are you sure? This action is permanent and cannot be undone.')) {
+        alert('Account deletion requested.');
+    }
+});
+</script>
+
+</body>
+</html>

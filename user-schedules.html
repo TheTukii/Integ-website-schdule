@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BukSU — My Schedules</title>
+  <meta name="description" content="View your weekly class schedule, subjects, and room assignments at BukSU.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/includes/css/user-dashboard-css.css">
+  <link rel="stylesheet" href="/includes/css/user-schedules-css.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <a class="topbar-brand" href="user-dashboard.html">
+      <div class="logo-mark">Bu</div>
+      BukSU Rooms
+    </a>
+
+    <div class="topbar-stats">
+      <div class="stat-chip">
+        <span class="dot dot-green"></span>
+        <strong>42</strong> Available
+      </div>
+      <div class="stat-chip">
+        <span class="dot dot-amber"></span>
+        <strong>18</strong> Occupied
+      </div>
+      <div class="stat-chip">
+        <span class="dot dot-blue"></span>
+        <strong>9</strong> Reserved
+      </div>
+    </div>
+
+    <div class="topbar-user">
+      <div class="user-meta">
+        <div class="name">Juan dela Cruz</div>
+        <div class="role">BSCS — 3rd Year</div>
+      </div>
+      <div class="avatar">JD</div>
+    </div>
+  </header>
+
+  <!-- BODY -->
+  <div class="body-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-left">
+      <div>
+        <p class="nav-section-label">Navigation</p>
+        <a href="user-dashboard.html" class="nav-item" style="text-decoration:none;">
+          <i class="bi bi-speedometer2 nav-icon"></i>
+          Dashboard
+        </a>
+        <a href="user-classroomfinder.html" class="nav-item" style="text-decoration:none;">
+          <i class="bi bi-search nav-icon"></i>
+          Classroom Finder
+        </a>
+        <a href="user-schedules.html" class="nav-item active" style="text-decoration:none;">
+          <i class="bi bi-calendar3 nav-icon"></i>
+          My Schedules
+        </a>
+      </div>
+
+      <div>
+        <p class="nav-section-label">System</p>
+        <a href="user-settinngs.html" class="nav-item" style="text-decoration:none;">
+          <i class="bi bi-gear nav-icon"></i>
+          Settings
+        </a>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+
+      <!-- Profile mini-card -->
+      <div class="profile-card">
+        <div class="profile-card-top">
+          <div class="avatar">JD</div>
+          <div>
+            <div class="name">Juan dela Cruz</div>
+            <div class="id">2021-00142</div>
+          </div>
+        </div>
+        <span class="badge">Student — BSCS</span>
+      </div>
+    </aside>
+
+    <!-- MAIN SCHEDULES AREA -->
+    <main class="schedules-content">
+
+      <!-- Page Header -->
+      <div class="schedules-top">
+        <div class="schedules-header">
+          <h1>My Schedules</h1>
+          <p>Your weekly class timetable and enrolled subjects</p>
+        </div>
+        <div class="semester-chip">
+          <i class="bi bi-calendar-event"></i>
+          2nd Semester · AY 2025–2026
+        </div>
+      </div>
+
+      <!-- Stat Summary -->
+      <div class="schedule-stats">
+        <div class="sched-stat-card">
+          <div class="stat-icon blue">
+            <i class="bi bi-book"></i>
+          </div>
+          <span class="stat-value">6</span>
+          <span class="stat-label">Enrolled Subjects</span>
+        </div>
+        <div class="sched-stat-card">
+          <div class="stat-icon green">
+            <i class="bi bi-clock"></i>
+          </div>
+          <span class="stat-value">21</span>
+          <span class="stat-label">Units Total</span>
+        </div>
+        <div class="sched-stat-card">
+          <div class="stat-icon amber">
+            <i class="bi bi-door-open"></i>
+          </div>
+          <span class="stat-value">5</span>
+          <span class="stat-label">Rooms Used</span>
+        </div>
+        <div class="sched-stat-card">
+          <div class="stat-icon purple">
+            <i class="bi bi-calendar-week"></i>
+          </div>
+          <span class="stat-value">3</span>
+          <span class="stat-label">Classes Today</span>
+        </div>
+      </div>
+
+      <!-- ═══ WEEKLY TIMETABLE ═══ -->
+      <div class="timetable-card">
+        <div class="timetable-card-header">
+          <h2><i class="bi bi-grid-3x3"></i> Weekly Timetable</h2>
+          <div class="view-toggle">
+            <button class="active" id="weekViewBtn">Week</button>
+            <button id="listViewBtn">List</button>
+          </div>
+        </div>
+
+        <div class="timetable-grid" id="timetableGrid">
+          <!-- Day headers -->
+          <div class="timetable-day-header">
+            <div class="day-cell">Time</div>
+            <div class="day-cell">Mon</div>
+            <div class="day-cell">Tue</div>
+            <div class="day-cell">Wed</div>
+            <div class="day-cell today">Thu</div>
+            <div class="day-cell">Fri</div>
+            <div class="day-cell">Sat</div>
+          </div>
+
+          <!-- 7:30 - 9:00 -->
+          <div class="timetable-row">
+            <div class="time-cell">7:30 AM</div>
+            <div class="slot-cell">
+              <div class="sched-block blue">
+                <span class="block-subj">CC 104</span>
+                <span class="block-room">Rm 212 · SciTech</span>
+              </div>
+            </div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell">
+              <div class="sched-block blue">
+                <span class="block-subj">CC 104</span>
+                <span class="block-room">Rm 212 · SciTech</span>
+              </div>
+            </div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell">
+              <div class="sched-block blue">
+                <span class="block-subj">CC 104</span>
+                <span class="block-room">Rm 212 · SciTech</span>
+              </div>
+            </div>
+            <div class="slot-cell"></div>
+          </div>
+
+          <!-- 9:00 - 10:30 -->
+          <div class="timetable-row">
+            <div class="time-cell">9:00 AM</div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell">
+              <div class="sched-block purple">
+                <span class="block-subj">CC 105</span>
+                <span class="block-room">Lab 101 · ICT</span>
+              </div>
+            </div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell">
+              <div class="sched-block purple">
+                <span class="block-subj">CC 105</span>
+                <span class="block-room">Lab 101 · ICT</span>
+              </div>
+            </div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+          </div>
+
+          <!-- 10:30 - 12:00 -->
+          <div class="timetable-row">
+            <div class="time-cell">10:30 AM</div>
+            <div class="slot-cell">
+              <div class="sched-block teal">
+                <span class="block-subj">GE 8</span>
+                <span class="block-room">Rm 105 · CAS</span>
+              </div>
+            </div>
+            <div class="slot-cell">
+              <div class="sched-block green">
+                <span class="block-subj">CC 106</span>
+                <span class="block-room">Rm 308 · ICT</span>
+              </div>
+            </div>
+            <div class="slot-cell">
+              <div class="sched-block teal">
+                <span class="block-subj">GE 8</span>
+                <span class="block-room">Rm 105 · CAS</span>
+              </div>
+            </div>
+            <div class="slot-cell">
+              <div class="sched-block green">
+                <span class="block-subj">CC 106</span>
+                <span class="block-room">Rm 308 · ICT</span>
+              </div>
+            </div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+          </div>
+
+          <!-- 1:00 - 2:30 -->
+          <div class="timetable-row">
+            <div class="time-cell">1:00 PM</div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell">
+              <div class="sched-block rose">
+                <span class="block-subj">CC 107</span>
+                <span class="block-room">Lab 202 · ICT</span>
+              </div>
+            </div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell">
+              <div class="sched-block rose">
+                <span class="block-subj">CC 107</span>
+                <span class="block-room">Lab 202 · ICT</span>
+              </div>
+            </div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell">
+              <div class="sched-block amber">
+                <span class="block-subj">PE 2</span>
+                <span class="block-room">Gymnasium</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2:30 - 4:00 -->
+          <div class="timetable-row">
+            <div class="time-cell">2:30 PM</div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+          </div>
+
+          <!-- 4:00 - 5:30 -->
+          <div class="timetable-row">
+            <div class="time-cell">4:00 PM</div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+            <div class="slot-cell"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ═══ ENROLLED SUBJECTS TABLE ═══ -->
+      <div class="subjects-card">
+        <div class="subjects-card-header">
+          <h2><i class="bi bi-journal-text"></i> Enrolled Subjects</h2>
+        </div>
+
+        <table class="subjects-table">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Description</th>
+              <th>Schedule</th>
+              <th>Days</th>
+              <th>Room</th>
+              <th>Units</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="subj-code-badge">
+                  <span class="subj-color-dot blue"></span>
+                  CC 104
+                </span>
+              </td>
+              <td>Discrete Mathematics</td>
+              <td>7:30 – 9:00 AM</td>
+              <td>
+                <div class="day-pills">
+                  <span class="day-pill">Mon</span>
+                  <span class="day-pill">Wed</span>
+                  <span class="day-pill">Fri</span>
+                </div>
+              </td>
+              <td><span class="room-pill">Rm 212 · SciTech</span></td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="subj-code-badge">
+                  <span class="subj-color-dot purple"></span>
+                  CC 105
+                </span>
+              </td>
+              <td>Information Management</td>
+              <td>9:00 – 10:30 AM</td>
+              <td>
+                <div class="day-pills">
+                  <span class="day-pill">Tue</span>
+                  <span class="day-pill">Thu</span>
+                </div>
+              </td>
+              <td><span class="room-pill">Lab 101 · ICT</span></td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="subj-code-badge">
+                  <span class="subj-color-dot green"></span>
+                  CC 106
+                </span>
+              </td>
+              <td>Data Structures</td>
+              <td>10:30 AM – 12:00 PM</td>
+              <td>
+                <div class="day-pills">
+                  <span class="day-pill">Tue</span>
+                  <span class="day-pill">Thu</span>
+                </div>
+              </td>
+              <td><span class="room-pill">Rm 308 · ICT</span></td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="subj-code-badge">
+                  <span class="subj-color-dot rose"></span>
+                  CC 107
+                </span>
+              </td>
+              <td>Application Development</td>
+              <td>1:00 – 2:30 PM</td>
+              <td>
+                <div class="day-pills">
+                  <span class="day-pill">Tue</span>
+                  <span class="day-pill">Thu</span>
+                </div>
+              </td>
+              <td><span class="room-pill">Lab 202 · ICT</span></td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="subj-code-badge">
+                  <span class="subj-color-dot teal"></span>
+                  GE 8
+                </span>
+              </td>
+              <td>Ethics</td>
+              <td>10:30 AM – 12:00 PM</td>
+              <td>
+                <div class="day-pills">
+                  <span class="day-pill">Mon</span>
+                  <span class="day-pill">Wed</span>
+                </div>
+              </td>
+              <td><span class="room-pill">Rm 105 · CAS</span></td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="subj-code-badge">
+                  <span class="subj-color-dot amber"></span>
+                  PE 2
+                </span>
+              </td>
+              <td>Badminton</td>
+              <td>1:00 – 2:30 PM</td>
+              <td>
+                <div class="day-pills">
+                  <span class="day-pill">Sat</span>
+                </div>
+              </td>
+              <td><span class="room-pill">Gymnasium</span></td>
+              <td>2</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+
+  </div>
+
+</body>
+</html>

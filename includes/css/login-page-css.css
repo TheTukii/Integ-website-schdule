@@ -1,117 +1,490 @@
+/* login-page-css.css  –  matched to user-dashboard aesthetic */
+
+/* ── CSS VARIABLES (mirrored from dashboard) ──── */
+:root {
+  --navy:       #042C53;
+  --navy-mid:   #185FA5;
+  --navy-light: #EBF3FB;
+  --navy-pale:  #F4F8FD;
+  --accent:     #378ADD;
+  --success:    #1D9E75;
+  --text:       #0D1B2A;
+  --muted:      #5A7A96;
+  --border:     #C8DFF0;
+  --white:      #ffffff;
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+}
+
+/* ── BASE ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
 body {
   margin: 0;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url("/includes/img/login-buksu-img.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--navy-pale);
+  color: var(--text);
+  overflow: hidden;
 }
 
-/* MAIN WRAPPER */
+/* ── MAIN WRAPPER ─────────────────────────────── */
 .page-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.3rem;
-    width: 100%;
+  display: flex;
+  align-items: stretch;
+  width: 960px;
+  max-width: 96vw;
+  min-height: 560px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow:
+    0 1px 3px rgba(4,44,83,0.04),
+    0 8px 32px rgba(4,44,83,0.07);
 }
 
-/* LEFT IMAGE */
+/* ── LEFT HERO PANEL ──────────────────────────── */
 .card-side {
-    width: 850px;
-    height: 620px;
-    background-color: #0B1C2E;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 18px;
-    border-radius: 10px;
-    overflow: hidden;
+  flex: 1 1 50%;
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  min-height: 560px;
+}
+
+/* Background image overlay */
+.card-side::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(4,44,83,0.15) 0%,
+    rgba(4,44,83,0.80) 100%
+  );
+  z-index: 1;
 }
 
 .welcome-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 8px;
-    display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-/* RIGHT SIDE */
+.card-side > div {
+  width: 100%;
+  height: 100%;
+}
+
+/* Hero text block over the image */
+.card-side .hero-content {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+}
+
+.card-side .hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.card-side .hero-brand .logo-mark {
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+
+.card-side .hero-brand span {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+}
+
+.card-side .hero-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.25;
+  margin: 0 0 0.75rem;
+}
+
+.card-side .hero-subtitle {
+  font-size: 14px;
+  color: rgba(255,255,255,0.72);
+  line-height: 1.5;
+  max-width: 340px;
+}
+
+/* ── RIGHT LOGIN PANEL ────────────────────────── */
 .Inner {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  flex: 1 1 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2.5rem;
+  background: var(--white);
 }
 
-/* LOGIN CARD */
 .card-login {
-    width: 23rem;
-    min-height: 520px;
-    background-color: #ffffff;
-    border-radius: 10px;
-    padding: 2rem 1.5rem;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-
 
 .card-login > div {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* LOGO */
+/* ── LOGO ─────────────────────────────────────── */
 .login-logo {
-    max-width: 180px;
-    margin-bottom: 0.2rem;
+  max-width: 140px;
+  margin-bottom: 0.5rem;
 }
 
-/* TITLE */
-.card-login h3 {
-    margin: 0 0 2rem 0; 
-    color: #042C53;
+/* ── HEADING ──────────────────────────────────── */
+.login-heading {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--navy);
+  margin: 0 0 0.25rem;
 }
 
-/* INPUTS */
+.login-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 2rem;
+}
+
+/* ── FORM ─────────────────────────────────────── */
+.card-login form,
+#loginForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── INPUT GROUP ──────────────────────────────── */
+.input-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 1rem;
+}
+
+.input-group label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .input-email,
 .input-password {
-    width: 15rem;
-    height: 2.5rem;
-    border-radius: 5px;
-    padding: 0 0.5rem;
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--navy-pale);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-/* EMAIL spacing */
-.input-email {
-    border: 1px solid #95989b;
-    margin-bottom: 1.2rem;
+.input-email:focus,
+.input-password:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(55,138,221,0.12);
 }
 
-/* PASSWORD spacing (MAIN FIX) */
-.input-password {
-    border: 1px solid #0B1C2E;
-    margin-bottom: 2.2rem;
+.input-email::placeholder,
+.input-password::placeholder {
+  color: var(--muted);
+  font-weight: 400;
 }
 
-/* BUTTON WRAPPER */
-.card-login form {
-    margin-bottom: 1rem;
-    width: 100%;
-    display: flex;
+/* ── FORGOT LINK (inline) ─────────────────────── */
+.forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.forgot-row a {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.forgot-row a:hover {
+  color: var(--navy-mid);
+}
+
+/* ── BUTTONS ──────────────────────────────────── */
+.btn-login {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--navy);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-login:hover {
+  background: var(--navy-mid);
+  box-shadow: 0 4px 12px rgba(4,44,83,0.18);
+}
+
+.btn-register {
+  width: 100%;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  color: var(--navy);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.btn-register:hover {
+  background: var(--navy-pale);
+  border-color: var(--accent);
+  color: var(--navy);
+}
+
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+/* ── SEPARATOR ────────────────────────────────── */
+.separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 1.25rem 0;
+}
+
+.separator::before,
+.separator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.separator span {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── RESPONSIVE ───────────────────────────────── */
+@media (max-width: 768px) {
+  .page-container {
     flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
+    width: 100%;
+    max-width: 420px;
+    min-height: auto;
+    border-radius: var(--radius-lg);
+  }
+
+  .card-side {
+    min-height: 200px;
+    padding: 1.5rem;
+  }
+
+  .card-side .hero-title {
+    font-size: 22px;
+  }
+
+  .Inner {
+    padding: 2rem 1.5rem;
+  }
 }
 
-/* BUTTON SIZE */
-.card-login .btn {
-    width: 12rem;
+/* ── PAGE TRANSITIONS ─────────────────────────── */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body {
+  animation: fadeSlideIn 0.4s ease-out both;
+}
+
+body.page-exit {
+  animation: fadeSlideOut 0.3s ease-in both;
+}
+
+@keyframes fadeSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* ── STEP INDICATOR ───────────────────────────── */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  margin-bottom: 1.75rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.step-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: all 0.2s;
+}
+
+.step span {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+
+.step.active .step-dot {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.step.active span {
+  color: var(--accent);
+}
+
+.step.completed .step-dot {
+  border-color: var(--success);
+  background: var(--success);
+  color: #fff;
+  font-size: 14px;
+}
+
+.step.completed span {
+  color: var(--success);
+}
+
+.step-line {
+  width: 40px;
+  height: 2px;
+  background: var(--border);
+  margin: 0 6px;
+  margin-bottom: 18px;
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+
+.step-line.filled {
+  background: var(--success);
+}
+
+/* ── RESEND TEXT ──────────────────────────────── */
+.resend-text {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.resend-text a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.resend-text a:hover {
+  color: var(--navy-mid);
 }
