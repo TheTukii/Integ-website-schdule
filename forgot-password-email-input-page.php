@@ -1,10 +1,16 @@
+<?php
+session_start();
+$error = $_SESSION['forgot_error'] ?? '';
+$success = $_SESSION['forgot_success'] ?? '';
+unset($_SESSION['forgot_error'], $_SESSION['forgot_success']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BukSU — Enter Verification Code</title>
-  <meta name="description" content="Enter the verification code sent to your email to continue resetting your password.">
+  <title>BukSU — Forgot Password</title>
+  <meta name="description" content="Reset your BukSU Classroom Finder password. Enter your email to receive a verification code.">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
@@ -24,12 +30,12 @@
         <div class="logo-mark">Bu</div>
         <span>BukSU Rooms</span>
       </div>
-      <h1 class="hero-title">Check your<br>inbox.</h1>
-      <p class="hero-subtitle">We've sent a 6-digit verification code to your email. Enter it here to continue.</p>
+      <h1 class="hero-title">Don't worry,<br>we've got you.</h1>
+      <p class="hero-subtitle">Enter your email and we'll send a code to help you reset your password and get back in.</p>
     </div>
   </div>
 
-  <!-- RIGHT — CODE INPUT FORM -->
+  <!-- RIGHT — FORGOT PASSWORD FORM -->
   <div class="Inner">
     <div class="card-login">
       <div>
@@ -40,12 +46,12 @@
 
         <!-- Step indicator -->
         <div class="step-indicator">
-          <div class="step completed">
-            <div class="step-dot"><i class="bi bi-check2"></i></div>
+          <div class="step active">
+            <div class="step-dot">1</div>
             <span>Email</span>
           </div>
-          <div class="step-line filled"></div>
-          <div class="step active">
+          <div class="step-line"></div>
+          <div class="step">
             <div class="step-dot">2</div>
             <span>Verify</span>
           </div>
@@ -56,28 +62,40 @@
           </div>
         </div>
 
-        <h2 class="login-heading">Enter code</h2>
-        <p class="login-sub">We sent a verification code to your email</p>
+        <h2 class="login-heading">Forgot password</h2>
+        <p class="login-sub">Enter your email to receive a reset code</p>
+
+        <?php if ($error): ?>
+          <div class="alert alert-danger py-2 px-3 mb-3" role="alert">
+            <i class="bi bi-exclamation-circle me-1"></i><?= htmlspecialchars($error) ?>
+          </div>
+        <?php endif; ?>
+
+        <?php if ($success): ?>
+          <div class="alert alert-success py-2 px-3 mb-3" role="alert">
+            <i class="bi bi-check-circle me-1"></i><?= htmlspecialchars($success) ?>
+          </div>
+        <?php endif; ?>
 
         <!-- FORM -->
-        <form id="codeForm">
+        <form id="forgotForm" action="forgot_password_validate.php" method="POST">
 
           <div class="input-group">
-            <label for="verifyCode">Verification Code</label>
-            <input type="text" id="verifyCode" class="input-email" placeholder="Enter 6-digit code" maxlength="6" style="letter-spacing: 0.3em; text-align: center; font-weight: 600;">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" class="input-email" placeholder="you@buksu.edu.ph" required>
           </div>
 
-          <p class="resend-text">Didn't receive it? <a href="#" id="resendLink">Resend code</a></p>
-
           <div class="btn-group" style="margin-top: 0.5rem;">
-            <button type="submit" class="btn-login" id="verifyBtn">
-              <i class="bi bi-shield-check"></i>
-              Verify
+            <button type="submit" class="btn-login" id="sendCodeBtn">
+              <i class="bi bi-envelope"></i>
+              Send Code
             </button>
 
-            <a href="forgot-password-email-input-page.html" class="btn-register" id="backBtn">
+            <div class="separator"><span>or</span></div>
+
+            <a href="login-page.php" class="btn-register" id="backToLoginBtn">
               <i class="bi bi-arrow-left"></i>
-              Go back
+              Back to Log in
             </a>
           </div>
 
@@ -97,7 +115,6 @@ function navigateTo(url) {
 }
 
 document.querySelectorAll('a[href]').forEach(function(link) {
-    if (link.id === 'resendLink') return;
     link.addEventListener('click', function(e) {
         const href = this.getAttribute('href');
         if (href && !href.startsWith('#') && !href.startsWith('javascript')) {
@@ -107,19 +124,12 @@ document.querySelectorAll('a[href]').forEach(function(link) {
     });
 });
 
-document.getElementById('resendLink').addEventListener('click', function(e) {
-    e.preventDefault();
-    alert('A new code has been sent to your email!');
-});
-
-document.getElementById("codeForm").addEventListener("submit", function(event) {
-    event.preventDefault();
-    let code = document.getElementById("verifyCode").value.trim();
-    if (code === "" || code.length < 6) {
-        alert("Please enter the full 6-digit code!");
-        return;
+document.getElementById("forgotForm").addEventListener("submit", function(event) {
+    let email = document.getElementById("email").value.trim();
+    if (email === "") {
+        event.preventDefault();
+        alert("Please enter your email address!");
     }
-    navigateTo("new-password-page.html");
 });
 </script>
 

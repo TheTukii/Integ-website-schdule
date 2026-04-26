@@ -4,7 +4,7 @@ require_once 'config.php';
 
 // Only accept POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: login-page.html");
+    header("Location: login-page.php");
     exit;
 }
 
@@ -27,7 +27,7 @@ $result = $stmt->get_result();
 if ($result->num_rows === 0) {
     $_SESSION['login_error'] = "Invalid email or password.";
     $stmt->close();
-    header("Location: login-page.html");
+    header("Location: login-page.php");
     exit;
 }
 
@@ -37,14 +37,14 @@ $stmt->close();
 // Verify password
 if (!password_verify($password, $user['password'])) {
     $_SESSION['login_error'] = "Invalid email or password.";
-    header("Location: login-page.html");
+    header("Location: login-page.php");
     exit;
 }
 
 // Check if account is active
 if (!$user['is_active']) {
     $_SESSION['login_error'] = "Your account is not active. Please contact the administrator.";
-    header("Location: login-page.html");
+    header("Location: login-page.php");
     exit;
 }
 

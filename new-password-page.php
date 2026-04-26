@@ -1,3 +1,14 @@
+<?php
+session_start();
+// Check if they are verified
+if (!isset($_SESSION['reset_email']) || empty($_SESSION['code_verified'])) {
+    header("Location: forgot-password-email-input-page.php");
+    exit;
+}
+
+$error = $_SESSION['reset_error'] ?? '';
+unset($_SESSION['reset_error']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,17 +70,23 @@
         <h2 class="login-heading">New password</h2>
         <p class="login-sub">Enter and confirm your new password</p>
 
+        <?php if ($error): ?>
+          <div class="alert alert-danger py-2 px-3 mb-3" role="alert">
+            <i class="bi bi-exclamation-circle me-1"></i><?= htmlspecialchars($error) ?>
+          </div>
+        <?php endif; ?>
+
         <!-- FORM -->
-        <form id="newPasswordForm">
+        <form id="newPasswordForm" action="reset_password_validate.php" method="POST">
 
           <div class="input-group">
             <label for="newPassword">New Password</label>
-            <input type="password" id="newPassword" class="input-password" placeholder="Enter new password">
+            <input type="password" id="newPassword" name="newPassword" class="input-password" placeholder="Enter new password" required>
           </div>
 
           <div class="input-group">
             <label for="confirmPassword">Confirm Password</label>
-            <input type="password" id="confirmPassword" class="input-password" placeholder="Re-enter new password">
+            <input type="password" id="confirmPassword" name="confirmPassword" class="input-password" placeholder="Re-enter new password" required>
           </div>
 
           <div class="btn-group" style="margin-top: 0.5rem;">
@@ -78,7 +95,7 @@
               Reset Password
             </button>
 
-            <a href="code-input-page.html" class="btn-register" id="backBtn">
+            <a href="code-input-page.php" class="btn-register" id="backBtn">
               <i class="bi bi-arrow-left"></i>
               Go back
             </a>
@@ -110,21 +127,19 @@ document.querySelectorAll('a[href]').forEach(function(link) {
 });
 
 document.getElementById("newPasswordForm").addEventListener("submit", function(event) {
-    event.preventDefault();
     let newPass = document.getElementById("newPassword").value.trim();
     let confirmPass = document.getElementById("confirmPassword").value.trim();
 
     if (newPass === "" || confirmPass === "") {
+        event.preventDefault();
         alert("Please fill in both password fields!");
         return;
     }
     if (newPass !== confirmPass) {
+        event.preventDefault();
         alert("Passwords do not match!");
         return;
     }
-
-    alert("Password reset successfully!");
-    navigateTo("login-page.html");
 });
 </script>
 

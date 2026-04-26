@@ -72,7 +72,7 @@ if ($stmt->execute()) {
     $_SESSION['register_success'] = "Account created! You can now log in.";
     $stmt->close();
     $conn->close();
-    header("Location: login-page.html");
+    header("Location: login-page.php");
     exit;
 } else {
     $_SESSION['register_error'] = "Registration failed. Please try again.";

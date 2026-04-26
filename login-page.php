@@ -73,7 +73,7 @@ unset($_SESSION['login_error'], $_SESSION['register_success']);
           </div>
 
           <div class="forgot-row">
-            <a href="forgot-password-email-input-page.html">Forgot password?</a>
+            <a href="forgot-password-email-input-page.php">Forgot password?</a>
           </div>
 
           <div class="btn-group">
