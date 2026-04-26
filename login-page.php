@@ -1,3 +1,9 @@
+<?php
+session_start();
+$error   = $_SESSION['login_error']   ?? '';
+$success = $_SESSION['register_success'] ?? ''; // shown after successful registration
+unset($_SESSION['login_error'], $_SESSION['register_success']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,17 +47,29 @@
         <h2 class="login-heading">Welcome back</h2>
         <p class="login-sub">Sign in to your account to continue</p>
 
-        <!-- FORM -->
-        <form id="loginForm">
+        <?php if ($error): ?>
+          <div class="alert alert-danger py-2 px-3 mb-3" role="alert">
+            <i class="bi bi-exclamation-circle me-1"></i><?= htmlspecialchars($error) ?>
+          </div>
+        <?php endif; ?>
+
+        <?php if ($success): ?>
+          <div class="alert alert-success py-2 px-3 mb-3" role="alert">
+            <i class="bi bi-check-circle me-1"></i><?= htmlspecialchars($success) ?>
+          </div>
+        <?php endif; ?>
+
+        <!-- FORM — posts to login_validate.php -->
+        <form id="loginForm" action="login_validate.php" method="POST">
 
           <div class="input-group">
             <label for="email">Email</label>
-            <input type="text" id="email" class="input-email" placeholder="you@buksu.edu.ph">
+            <input type="email" id="email" name="email" class="input-email" placeholder="you@buksu.edu.ph" required>
           </div>
 
           <div class="input-group">
             <label for="password">Password</label>
-            <input type="password" id="password" class="input-password" placeholder="Enter your password">
+            <input type="password" id="password" name="password" class="input-password" placeholder="Enter your password" required>
           </div>
 
           <div class="forgot-row">
@@ -66,7 +84,7 @@
 
             <div class="separator"><span>or</span></div>
 
-            <a href="register-page.html" class="btn-register" id="registerBtn">
+            <a href="register-page.php" class="btn-register" id="registerBtn">
               <i class="bi bi-person-plus"></i>
               Create an account
             </a>
@@ -90,7 +108,7 @@ function navigateTo(url) {
     }, 280);
 }
 
-// Intercept all anchor links for smooth transition
+// Intercept anchor links for smooth transition (skip form targets)
 document.querySelectorAll('a[href]').forEach(function(link) {
     link.addEventListener('click', function(e) {
         const href = this.getAttribute('href');
@@ -101,20 +119,14 @@ document.querySelectorAll('a[href]').forEach(function(link) {
     });
 });
 
-// Form validation + transition
+// Client-side blank-field guard (server does the real auth)
 document.getElementById("loginForm").addEventListener("submit", function(event) {
-    event.preventDefault();
-
-    let email = document.getElementById("email").value.trim();
-    let password = document.getElementById("password").value.trim();
-
+    const email    = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
     if (email === "" || password === "") {
+        event.preventDefault();
         alert("Please fill in both email and password!");
-        return;
     }
-
-    // if valid → smooth transition to dashboard
-    navigateTo("user-dashboard.html");
 });
 </script>
 
