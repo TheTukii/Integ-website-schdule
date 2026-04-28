@@ -54,10 +54,6 @@ $_SESSION['user_name'] = $user['name'];
 $_SESSION['user_role'] = $user['role'];
 $conn->close();
 
-// Route to correct dashboard by role
-if ($user['role'] === 'admin') {
-    header("Location: includes/admin/admin-dashboard.html");
-} else {
-    header("Location: user-dashboard.html");
-}
+// Both admin and instructor use the same scheduling map interface
+header("Location: comlab-map.php");
 exit;
