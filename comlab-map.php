@@ -130,7 +130,7 @@ if ($selectedRoomId > 0) {
 }
 
 $todayRooms = [];
-$todaySql = "SELECT r.id, r.room_name, r.status, 
+$todaySql = "SELECT r.id, r.room_name, r.status,
             EXISTS(
                 SELECT 1 FROM schedules s
                 WHERE s.room_id = r.id
@@ -163,6 +163,32 @@ if ($isLoggedIn && $role === 'instructor') {
     $todaySchedule = $todayStmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $todayStmt->close();
 }
+
+// Instructors list for admin add-schedule dropdown
+$instructors = [];
+if ($role === 'admin') {
+    $insRes = $conn->query("SELECT id, name FROM users WHERE role IN ('instructor','admin') ORDER BY name ASC");
+    if ($insRes instanceof mysqli_result) {
+        while ($r = $insRes->fetch_assoc()) $instructors[] = $r;
+    }
+}
+
+// Build allSchedulesJson for map search highlight
+$allSchedRaw = $conn->query(
+    "SELECT s.subject, s.section, u.name AS instructor_name, r.id AS room_id
+     FROM schedules s
+     INNER JOIN users u ON u.id = s.instructor_id
+     INNER JOIN rooms r ON r.id = s.room_id
+     WHERE r.room_name LIKE 'Comlab %' AND s.status <> 'cancelled'"
+);
+$allSchedulesForSearch = [];
+if ($allSchedRaw instanceof mysqli_result) {
+    while ($sr = $allSchedRaw->fetch_assoc()) {
+        $rid = (int)$sr['room_id'];
+        $allSchedulesForSearch[$rid][] = strtolower($sr['subject'] . ' ' . $sr['section'] . ' ' . $sr['instructor_name']);
+    }
+}
+$allSchedulesJson = json_encode($allSchedulesForSearch);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -181,8 +207,8 @@ if ($isLoggedIn && $role === 'instructor') {
   <?php endif; ?>
   <style>
     body.page-comlab-map {
-      --sidebar-w: 260px;
-      --right-w: 288px;
+      --sidebar-w: 220px;
+      --right-w: 320px;
     }
     .sidebar-live-region {
       border: 1px solid var(--border, #C8DFF0);
@@ -292,6 +318,70 @@ if ($isLoggedIn && $role === 'instructor') {
     .legend-available { background: #e7f8f1; }
     .legend-occupied { background: #fce9e9; }
     .legend-out { background: #eeeeee; }
+    /* ── No-scroll body ── */
+    body { overflow: hidden; }
+    /* ── Compact right sidebar ── */
+    .sidebar-right { padding: 0.75rem 0.85rem; gap: 0.6rem; }
+    .panel-title { margin-bottom: 3px; }
+    .schedule-item { padding: 6px 10px; }
+    .sidebar-right-inner { gap: 0.6rem; }
+    /* Cap the schedule list so Add Schedule form always fits */
+    .full-room-schedule-list { max-height: 26vh !important; overflow-y: auto; }
+    .schedule-form-stack .form-label, .schedule-form .form-label { font-size: 11px; margin-bottom: 1px; }
+    /* ── Topbar search bar ── */
+    .topbar-search-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      max-width: 340px;
+    }
+    .topbar-search-box {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      width: 100%;
+      border: 1px solid var(--border, #C8DFF0);
+      border-radius: 20px;
+      padding: 5px 12px;
+      background: var(--navy-pale, #F4F8FD);
+      transition: border-color 0.15s;
+    }
+    .topbar-search-box:focus-within { border-color: var(--accent, #378ADD); }
+    .topbar-search-box input {
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text, #0D1B2A);
+      outline: none;
+      flex: 1;
+      min-width: 0;
+    }
+    .topbar-search-box input::placeholder { color: var(--muted, #5A7A96); }
+    .map-search-clear {
+      border: none;
+      background: transparent;
+      color: var(--muted, #5A7A96);
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      font-size: 15px;
+    }
+    .map-search-clear:hover { color: var(--text, #0D1B2A); }
+    /* ── Tile highlight / dim ── */
+    .comlab-tile { transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.2s ease, filter 0.2s ease; }
+    .comlab-tile.tile-dim {
+      opacity: 0.28;
+      filter: grayscale(60%);
+    }
+    .comlab-tile.tile-match {
+      opacity: 1;
+      filter: none;
+      box-shadow: 0 0 0 3px #378ADD, 0 4px 16px rgba(55,138,221,0.35);
+      z-index: 10;
+    }
   </style>
 </head>
 <body class="page-comlab-map">
@@ -301,6 +391,15 @@ if ($isLoggedIn && $role === 'instructor') {
       BukSU Rooms
     </a>
 
+    <!-- Map search bar -->
+    <div class="topbar-search-wrap">
+      <div class="topbar-search-box">
+        <i class="bi bi-search" style="font-size:13px;color:var(--muted);"></i>
+        <input type="text" id="mapSearch" placeholder="Search section, subject, or instructor…" autocomplete="off">
+        <button type="button" id="mapSearchClear" class="map-search-clear" style="display:none;" aria-label="Clear search"><i class="bi bi-x"></i></button>
+      </div>
+    </div>
+
     <div class="topbar-stats">
       <div class="stat-chip">
         <span class="dot dot-green"></span>
@@ -308,11 +407,7 @@ if ($isLoggedIn && $role === 'instructor') {
       </div>
       <div class="stat-chip">
         <span class="dot dot-blue"></span>
-        <strong><?= htmlspecialchars($today) ?></strong> Live View
-      </div>
-      <div class="stat-chip">
-        <span class="dot dot-amber"></span>
-        <strong><?= $canManageSchedules ? 'Edit Enabled' : 'View Only' ?></strong>
+        <strong><?= htmlspecialchars($today) ?></strong>
       </div>
     </div>
 
@@ -339,9 +434,15 @@ if ($isLoggedIn && $role === 'instructor') {
           Comlab Map
         </a>
         <?php if ($isLoggedIn): ?>
-          <a href="user-schedules.html" class="nav-item" style="text-decoration:none;">
+          <a href="my-schedules.php" class="nav-item" style="text-decoration:none;">
             <i class="bi bi-calendar3 nav-icon"></i>
             My Schedules
+          </a>
+        <?php endif; ?>
+        <?php if ($role === 'admin'): ?>
+          <a href="manage-users.php" class="nav-item" style="text-decoration:none;">
+            <i class="bi bi-people nav-icon"></i>
+            Manage Users
           </a>
         <?php endif; ?>
       </div>
@@ -393,7 +494,7 @@ if ($isLoggedIn && $role === 'instructor') {
     <main class="main-content">
       <div class="map-container comlab-map-container">
         <span class="map-label">Comlab Floor Map</span>
-        <div class="comlab-map-grid">
+        <div class="comlab-map-grid" id="comlabMapGrid">
           <?php foreach ($roomLayout as $layout): ?>
             <?php
             $label = strtolower($layout['label']);
@@ -406,15 +507,14 @@ if ($isLoggedIn && $role === 'instructor') {
                     }
                 }
             }
-            if (!$roomData) {
-                continue;
-            }
+            if (!$roomData) { continue; }
             $isActiveRoom = ((int) $roomData['id'] === $selectedRoomId);
             $statusClass = $roomData['status'] === 'out_of_service' ? 'status-out' : ($roomData['status'] === 'occupied' ? 'status-busy' : 'status-free');
             ?>
             <a class="comlab-tile <?= $layout['slot'] ?> <?= $statusClass ?> <?= $isActiveRoom ? 'active' : '' ?>"
                style="<?= htmlspecialchars($layout['style']) ?>"
-               href="comlab-map.php?room_id=<?= (int) $roomData['id'] ?>">
+               href="comlab-map.php?room_id=<?= (int) $roomData['id'] ?>"
+               data-room-id="<?= (int) $roomData['id'] ?>">
               <span><?= htmlspecialchars($roomData['display_label']) ?></span>
             </a>
           <?php endforeach; ?>
@@ -482,7 +582,13 @@ if ($isLoggedIn && $role === 'instructor') {
                 <span class="room-tag tag-blue">Instructor: <?= htmlspecialchars($row['instructor_name']) ?></span>
                 <?php if ($canManageSchedules && $selectedRoomId > 0): ?>
                   <div class="d-flex gap-2 mt-2">
-                    <?php if (!($role === 'instructor' && in_array(($selectedRoom['status'] ?? 'available'), ['occupied', 'out_of_service'], true))): ?>
+                    <?php
+                      // Admins can edit any schedule.
+                      // Instructors can only edit their own.
+                      $canEdit = ($role === 'admin') || ($role === 'instructor' && (int)$row['instructor_id'] === $userId);
+                      $roomUnavailForEdit = ($role === 'instructor' && in_array(($selectedRoom['status'] ?? 'available'), ['occupied', 'out_of_service'], true));
+                    ?>
+                    <?php if ($canEdit && !$roomUnavailForEdit): ?>
                       <button class="btn btn-sm btn-outline-primary edit-btn"
                               type="button"
                               data-id="<?= (int) $row['id'] ?>"
@@ -490,7 +596,8 @@ if ($isLoggedIn && $role === 'instructor') {
                               data-section="<?= htmlspecialchars((string) $row['section']) ?>"
                               data-day="<?= htmlspecialchars($row['day_of_week']) ?>"
                               data-start="<?= htmlspecialchars($row['time_start']) ?>"
-                              data-end="<?= htmlspecialchars($row['time_end']) ?>">
+                              data-end="<?= htmlspecialchars($row['time_end']) ?>"
+                              data-instructor-name="<?= htmlspecialchars($row['instructor_name']) ?>">
                         Edit
                       </button>
                     <?php endif; ?>
@@ -514,43 +621,12 @@ if ($isLoggedIn && $role === 'instructor') {
         <p class="panel-title">Add schedule</p>
         <?php if ($role === 'instructor' && in_array(($selectedRoom['status'] ?? 'available'), ['occupied', 'out_of_service'], true)): ?>
           <div class="alert alert-warning py-2 px-3 small mb-0">
-            This room is currently unavailable. Instructors cannot add schedules while it is occupied or out of service.
+            This room is currently unavailable.
           </div>
         <?php else: ?>
-          <form action="schedule_save.php" method="POST" class="schedule-form schedule-form-stack">
-            <input type="hidden" name="room_id" value="<?= (int) $selectedRoomId ?>">
-            <input type="hidden" name="action" value="create">
-            <div class="mb-3">
-              <label class="form-label">Subject</label>
-              <input type="text" class="form-control form-control-sm" name="subject" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Section</label>
-              <input type="text" class="form-control form-control-sm" name="section">
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Day</label>
-              <select class="form-select form-select-sm" name="day_of_week" required>
-                <?php foreach ($days as $day): ?>
-                  <option value="<?= htmlspecialchars($day) ?>"><?= htmlspecialchars($day) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="d-flex gap-2 mb-3">
-              <div class="flex-fill">
-                <label class="form-label">Start</label>
-                <input type="time" class="form-control form-control-sm" name="time_start" required>
-              </div>
-              <div class="flex-fill">
-                <label class="form-label">End</label>
-                <input type="time" class="form-control form-control-sm" name="time_end" required>
-              </div>
-            </div>
-            <button type="submit" class="quick-btn mb-2">Save schedule</button>
-            <?php if ($isLoggedIn): ?>
-              <p class="small text-muted mb-0 pt-1" role="note">Schedules are saved under <strong><?= htmlspecialchars($userName) ?></strong>.</p>
-            <?php endif; ?>
-          </form>
+          <button type="button" class="quick-btn" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+            <i class="bi bi-plus-lg"></i> Add schedule for <?= htmlspecialchars($selectedRoom['display_label'] ?? 'this room') ?>
+          </button>
         <?php endif; ?>
       </div>
       <?php endif; ?>
@@ -598,9 +674,8 @@ if ($isLoggedIn && $role === 'instructor') {
                   <input type="time" class="form-control" name="time_end" id="edit_end" required>
                 </div>
               </div>
-              <?php if ($isLoggedIn): ?>
-                <p class="small text-muted mt-2 mb-0" role="note">Instructor stays <strong><?= htmlspecialchars($userName) ?></strong>.</p>
-              <?php endif; ?>
+              <!-- Preserve original instructor — shown read-only -->
+              <p class="small text-muted mt-2 mb-0">Instructor: <strong id="edit_instructor_display">—</strong></p>
             </div>
             <div class="modal-footer">
               <button type="submit" class="btn btn-primary">Save changes</button>
@@ -609,6 +684,68 @@ if ($isLoggedIn && $role === 'instructor') {
         </div>
       </div>
     </div>
+  <?php endif; ?>
+
+  <?php if ($canManageSchedules && $selectedRoomId > 0): ?>
+  <!-- Add Schedule Modal -->
+  <div class="modal fade" id="addScheduleModal" tabindex="-1" aria-labelledby="addScheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST" action="schedule_save.php">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addScheduleModalLabel">
+              <i class="bi bi-plus-lg me-1"></i> Add Schedule — <?= htmlspecialchars($selectedRoom['display_label'] ?? '') ?>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="action" value="create">
+            <input type="hidden" name="room_id" value="<?= (int) $selectedRoomId ?>">
+            <div class="mb-2">
+              <label class="form-label">Subject</label>
+              <input type="text" class="form-control" name="subject" required autofocus>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Section</label>
+              <input type="text" class="form-control" name="section" placeholder="e.g. BSIT-2A">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Day</label>
+              <select class="form-select" name="day_of_week" required>
+                <?php foreach ($days as $day): ?>
+                  <option value="<?= htmlspecialchars($day) ?>"><?= htmlspecialchars($day) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="row g-2 mb-2">
+              <div class="col">
+                <label class="form-label">Start time</label>
+                <input type="time" class="form-control" name="time_start" required>
+              </div>
+              <div class="col">
+                <label class="form-label">End time</label>
+                <input type="time" class="form-control" name="time_end" required>
+              </div>
+            </div>
+            <?php if ($role === 'admin' && !empty($instructors)): ?>
+            <div class="mb-2">
+              <label class="form-label">Instructor</label>
+              <select class="form-select" name="instructor_id" required>
+                <?php foreach ($instructors as $ins): ?>
+                  <option value="<?= (int)$ins['id'] ?>"><?= htmlspecialchars($ins['name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <?php endif; ?>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save Schedule</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
   <?php endif; ?>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -625,11 +762,39 @@ if ($isLoggedIn && $role === 'instructor') {
           document.getElementById('edit_day').value = btn.dataset.day;
           document.getElementById('edit_start').value = btn.dataset.start;
           document.getElementById('edit_end').value = btn.dataset.end;
+          const dispEl = document.getElementById('edit_instructor_display');
+          if (dispEl) dispEl.textContent = btn.dataset.instructorName || '—';
           editModal.show();
         });
       });
     }
+
   </script>
   <?php endif; ?>
+
+  <script>
+    // Map search — runs for all users
+    (function() {
+      const allSchedules = <?= $allSchedulesJson ?>;
+      const mapSearch    = document.getElementById('mapSearch');
+      const mapClear     = document.getElementById('mapSearchClear');
+      const tiles        = document.querySelectorAll('#comlabMapGrid .comlab-tile');
+      if (!mapSearch) return;
+      function applyMapSearch() {
+        const q = mapSearch.value.trim().toLowerCase();
+        mapClear.style.display = q ? 'flex' : 'none';
+        if (!q) { tiles.forEach(t => t.classList.remove('tile-dim','tile-match')); return; }
+        tiles.forEach(t => {
+          const rid   = parseInt(t.dataset.roomId, 10);
+          const scheds = allSchedules[rid] || [];
+          const match  = scheds.some(s => s.includes(q));
+          t.classList.toggle('tile-match', match);
+          t.classList.toggle('tile-dim',  !match);
+        });
+      }
+      mapSearch.addEventListener('input', applyMapSearch);
+      mapClear.addEventListener('click', () => { mapSearch.value = ''; applyMapSearch(); mapSearch.focus(); });
+    })();
+  </script>
 </body>
 </html>

@@ -17,15 +17,16 @@ if (!in_array($role, ['admin', 'instructor'], true)) {
     exit;
 }
 
-$action = $_POST['action'] ?? 'create';
-$roomId = (int) ($_POST['room_id'] ?? 0);
-$subject = trim($_POST['subject'] ?? '');
-$section = trim($_POST['section'] ?? '');
-$dayOfWeek = trim($_POST['day_of_week'] ?? '');
-$timeStart = trim($_POST['time_start'] ?? '');
-$timeEnd = trim($_POST['time_end'] ?? '');
-// Instructor is always the logged-in admin or instructor (no picker).
+$action     = $_POST['action'] ?? 'create';
+$roomId     = (int) ($_POST['room_id'] ?? 0);
+$subject    = trim($_POST['subject'] ?? '');
+$section    = trim($_POST['section'] ?? '');
+$dayOfWeek  = trim($_POST['day_of_week'] ?? '');
+$timeStart  = trim($_POST['time_start'] ?? '');
+$timeEnd    = trim($_POST['time_end'] ?? '');
 $scheduleId = (int) ($_POST['schedule_id'] ?? 0);
+// For create: admin may pick an instructor_id; instructor always self-assigns.
+$postedInstructorId = (int) ($_POST['instructor_id'] ?? 0);
 
 $validDays = ['Monday and Thursday', 'Tuesday and Wednesday'];
 
@@ -99,7 +100,14 @@ if (in_array($action, ['create', 'update'], true)) {
     }
 }
 
-$instructorId = $userId;
+// Determine the instructor_id for CREATE:
+// - Instructors always use their own ID.
+// - Admins use the posted instructor_id if valid, else fall back to their own.
+if ($role === 'instructor') {
+    $instructorId = $userId;
+} else {
+    $instructorId = ($postedInstructorId > 0) ? $postedInstructorId : $userId;
+}
 
 $checkActor = $conn->prepare("SELECT id FROM users WHERE id = ? AND role IN ('admin', 'instructor') LIMIT 1");
 $checkActor->bind_param('i', $instructorId);
@@ -112,6 +120,18 @@ if (!$validActor || $userId <= 0) {
     $_SESSION['schedule_flash_type'] = 'error';
     header('Location: comlab-map.php?room_id=' . $roomId);
     exit;
+}
+
+// For UPDATE as admin: preserve the original instructor_id from the DB.
+if ($action === 'update' && $role === 'admin' && $scheduleId > 0) {
+    $origStmt = $conn->prepare("SELECT instructor_id FROM schedules WHERE id = ? LIMIT 1");
+    $origStmt->bind_param('i', $scheduleId);
+    $origStmt->execute();
+    $origRow = $origStmt->get_result()->fetch_assoc();
+    $origStmt->close();
+    if ($origRow) {
+        $instructorId = (int) $origRow['instructor_id'];
+    }
 }
 
 $hasConflict = false;
@@ -146,13 +166,15 @@ if ($hasConflict) {
 
 if ($action === 'update' && $scheduleId > 0) {
     if ($role === 'instructor') {
+        // Instructors can only update their own schedules
         $updateStmt = $conn->prepare(
             "UPDATE schedules
-             SET subject = ?, section = ?, day_of_week = ?, time_start = ?, time_end = ?, instructor_id = ?
+             SET subject = ?, section = ?, day_of_week = ?, time_start = ?, time_end = ?
              WHERE id = ? AND room_id = ? AND instructor_id = ?"
         );
-        $updateStmt->bind_param('sssssiiii', $subject, $section, $dayOfWeek, $timeStart, $timeEnd, $instructorId, $scheduleId, $roomId, $userId);
+        $updateStmt->bind_param('sssssiii', $subject, $section, $dayOfWeek, $timeStart, $timeEnd, $scheduleId, $roomId, $userId);
     } else {
+        // Admin: update fields but preserve existing instructor_id
         $updateStmt = $conn->prepare(
             "UPDATE schedules
              SET subject = ?, section = ?, day_of_week = ?, time_start = ?, time_end = ?, instructor_id = ?
