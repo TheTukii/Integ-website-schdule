@@ -54,10 +54,15 @@ $_SESSION['user_name'] = $user['name'];
 $_SESSION['user_role'] = $user['role'];
 $conn->close();
 
-// Route to correct dashboard by role
 if ($user['role'] === 'admin') {
-    header("Location: includes/admin/admin-dashboard.html");
-} else {
-    header("Location: user-dashboard.html");
+    header("Location: admin-dashboard.php");
+    exit;
 }
+
+if ($user['role'] === 'instructor') {
+    header("Location: instructor-dashboard.php");
+    exit;
+}
+
+header("Location: student-dashboard.php");
 exit;

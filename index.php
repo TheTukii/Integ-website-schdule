@@ -1,4 +1,4 @@
 <?php
-// Entry point — redirect to login page
-header("Location: login-page.php");
+// Entry point — students can view map without logging in
+header("Location: comlab-map.php");
 exit;
