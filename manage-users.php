@@ -9,6 +9,8 @@ if (!isset($_SESSION['user_id'], $_SESSION['user_role']) || $_SESSION['user_role
 
 $adminId   = (int) $_SESSION['user_id'];
 $adminName = $_SESSION['user_name'] ?? 'Admin';
+$role      = $_SESSION['user_role'];
+$isLoggedIn = isset($_SESSION['user_id']);
 
 $flashMessage = $_SESSION['user_manage_flash'] ?? '';
 $flashType    = $_SESSION['user_manage_flash_type'] ?? 'success';
@@ -42,10 +44,63 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
     body {
       overflow: hidden;
     }
+
+    /* ── Layout ── */
     .body-layout {
+      display: flex;
+      flex-direction: row;
       height: calc(100vh - var(--topbar-h));
       overflow: hidden;
     }
+
+    /* ── Sidebar ── */
+    .sidebar-left {
+      width: 220px;
+      flex-shrink: 0;
+      height: 100%;
+      overflow-y: auto;
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      padding: 1.25rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 8px;
+      margin: 0 0 6px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-item:hover {
+      background: var(--navy-pale);
+      color: var(--navy);
+    }
+    .nav-item.active {
+      background: var(--navy-light);
+      color: var(--navy);
+      font-weight: 600;
+    }
+    .nav-icon {
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    /* ── Main content ── */
     .manage-main {
       flex: 1;
       display: flex;
@@ -160,9 +215,9 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
       text-transform: capitalize;
       letter-spacing: 0.04em;
     }
-    .role-badge.admin    { background: #042C530F; color: var(--navy); border: 1px solid #042C5330; }
+    .role-badge.admin      { background: #042C530F; color: var(--navy); border: 1px solid #042C5330; }
     .role-badge.instructor { background: #1D9E750F; color: #145c44; border: 1px solid #1D9E7530; }
-    .role-badge.student  { background: #3779DD0F; color: #1a4e9b; border: 1px solid #3779DD30; }
+    .role-badge.student    { background: #3779DD0F; color: #1a4e9b; border: 1px solid #3779DD30; }
     .actions-cell {
       display: flex;
       align-items: center;
@@ -258,14 +313,36 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
         <div class="role">Admin</div>
       </div>
       <div class="avatar"><?= strtoupper(substr($adminName, 0, 1)) ?></div>
-      <a class="btn btn-sm btn-outline-secondary" href="comlab-map.php">
-        <i class="bi bi-arrow-left"></i> Back to Map
-      </a>
       <a class="btn btn-sm btn-outline-primary" href="logout.php">Logout</a>
     </div>
   </header>
 
-  <div class="body-layout" style="flex-direction:column;">
+  <div class="body-layout">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar-left" aria-label="Main navigation">
+      <div>
+        <p class="nav-section-label">Navigation</p>
+        <a href="comlab-map.php" class="nav-item" style="text-decoration:none;">
+          <i class="bi bi-map nav-icon"></i>
+          Comlab Map
+        </a>
+        <?php if ($isLoggedIn): ?>
+          <a href="my-schedules.php" class="nav-item" style="text-decoration:none;">
+            <i class="bi bi-calendar3 nav-icon"></i>
+            My Schedules
+          </a>
+        <?php endif; ?>
+        <?php if ($role === 'admin'): ?>
+          <a href="manage-users.php" class="nav-item active" style="text-decoration:none;">
+            <i class="bi bi-people nav-icon"></i>
+            Manage Users
+          </a>
+        <?php endif; ?>
+      </div>
+    </aside>
+
+    <!-- ── Main content ── -->
     <main class="manage-main">
 
       <?php if ($flashMessage): ?>

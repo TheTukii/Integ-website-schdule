@@ -10,6 +10,7 @@ if (!isset($_SESSION['user_id'], $_SESSION['user_role'])) {
 $role     = $_SESSION['user_role'];
 $userId   = (int) $_SESSION['user_id'];
 $userName = $_SESSION['user_name'] ?? 'User';
+$isLoggedIn = isset($_SESSION['user_id']);
 
 // Instructors see their own. Admins can view any instructor's via ?instructor_id=
 $viewId = $userId;
@@ -66,11 +67,63 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
   <?php endif; ?>
   <style>
     body { overflow: hidden; }
+
+    /* ── Layout ── */
     .body-layout {
+      display: flex;
+      flex-direction: row;           /* sidebar + main side by side */
       height: calc(100vh - var(--topbar-h));
       overflow: hidden;
-      flex-direction: column;
     }
+
+    /* ── Sidebar ── */
+    .sidebar-left {
+      width: 220px;
+      flex-shrink: 0;
+      height: 100%;
+      overflow-y: auto;
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      padding: 1.25rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 8px;
+      margin: 0 0 6px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-item:hover {
+      background: var(--navy-pale);
+      color: var(--navy);
+    }
+    .nav-item.active {
+      background: var(--navy-light);
+      color: var(--navy);
+      font-weight: 600;
+    }
+    .nav-icon {
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    /* ── Main content ── */
     .my-sched-main {
       flex: 1;
       display: flex;
@@ -235,15 +288,37 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
         <div class="name"><?= htmlspecialchars($userName) ?></div>
         <div class="role"><?= ucfirst(htmlspecialchars($role)) ?></div>
       </div>
-      <div class="avatar"><?= strtoupper(substr($userName, 0, 1)) ?></div>
-      <a class="btn btn-sm btn-outline-secondary" href="comlab-map.php">
-        <i class="bi bi-arrow-left"></i> Back
-      </a>
+      
       <a class="btn btn-sm btn-outline-primary" href="logout.php">Logout</a>
     </div>
   </header>
 
-  <div class="body-layout" style="display:flex;">
+  <div class="body-layout">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar-left" aria-label="Main navigation">
+      <div>
+        <p class="nav-section-label">Navigation</p>
+        <a href="comlab-map.php" class="nav-item" style="text-decoration:none;">
+          <i class="bi bi-map nav-icon"></i>
+          Comlab Map
+        </a>
+        <?php if ($isLoggedIn): ?>
+          <a href="my-schedules.php" class="nav-item active" style="text-decoration:none;">
+            <i class="bi bi-calendar3 nav-icon"></i>
+            My Schedules
+          </a>
+        <?php endif; ?>
+        <?php if ($role === 'admin'): ?>
+          <a href="manage-users.php" class="nav-item" style="text-decoration:none;">
+            <i class="bi bi-people nav-icon"></i>
+            Manage Users
+          </a>
+        <?php endif; ?>
+      </div>
+    </aside>
+
+    <!-- ── Main content ── -->
     <main class="my-sched-main">
 
       <div class="page-header">

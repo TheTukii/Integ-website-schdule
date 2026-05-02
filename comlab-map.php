@@ -13,6 +13,7 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
 $comlabCssInline = is_file($comlabCssPath) ? file_get_contents($comlabCssPath) : '';
 
 $selectedRoomId = isset($_GET['room_id']) ? (int) $_GET['room_id'] : 0;
+$selectedBuilding = isset($_GET['building']) ? $_GET['building'] : null;
 $flashMessage = $_SESSION['schedule_flash'] ?? '';
 $flashType = $_SESSION['schedule_flash_type'] ?? 'success';
 unset($_SESSION['schedule_flash'], $_SESSION['schedule_flash_type']);
@@ -20,26 +21,55 @@ unset($_SESSION['schedule_flash'], $_SESSION['schedule_flash_type']);
 $days = ['Monday and Thursday', 'Tuesday and Wednesday'];
 $today = date('l');
 
-$roomLayout = [
-    ['label' => 'Comlab 1', 'slot' => 'lab1', 'style' => 'left:71.5%;top:19%;width:11%;height:17%;'],
-    ['label' => 'Comlab 2', 'slot' => 'lab2', 'style' => 'left:71.5%;top:36%;width:11%;height:17%;'],
-    ['label' => 'Comlab 3', 'slot' => 'lab3', 'style' => 'left:71.5%;top:53%;width:11%;height:17%;'],
-    ['label' => 'Comlab 4', 'slot' => 'lab4', 'style' => 'left:70%;top:84%;width:11%;height:14%;'],
-    ['label' => 'Comlab 5', 'slot' => 'lab5', 'style' => 'left:61%;top:84%;width:9%;height:14%;'],
-    ['label' => 'Comlab 6', 'slot' => 'lab6', 'style' => 'left:52%;top:84%;width:9%;height:14%;'],
-    ['label' => 'Comlab 7', 'slot' => 'lab7', 'style' => 'left:43%;top:84%;width:9%;height:14%;'],
-    ['label' => 'Comlab 8', 'slot' => 'lab8', 'style' => 'left:89%;top:12%;width:10%;height:17%;'],
-    ['label' => 'Comlab 9', 'slot' => 'lab9', 'style' => 'left:89%;top:29%;width:10%;height:17%;'],
-    ['label' => 'Comlab 10', 'slot' => 'lab10', 'style' => 'left:89%;top:46%;width:10%;height:17%;'],
-    ['label' => 'Comlab 11', 'slot' => 'lab11', 'style' => 'left:8.5%;top:84%;width:10%;height:14%;'],
-    ['label' => 'Comlab 12', 'slot' => 'lab12', 'style' => 'left:8.5%;top:70%;width:10%;height:14%;'],
+// ── Building definitions ──────────────────────────────────────────────
+$buildings = [
+    'highschool' => [
+        'key'         => 'highschool',
+        'name'        => 'High School Building',
+        'short'       => 'HS Building',
+        'description' => 'Computer laboratories on the lower floor',
+        'icon'        => 'bi-building',
+        'rooms'       => ['Comlab 8', 'Comlab 9', 'Comlab 10'],
+        'color'       => '#1a6b9a',
+        'pale'        => '#e8f4fb',
+    ],
+    'finance' => [
+        'key'         => 'finance',
+        'name'        => 'Finance Building',
+        'short'       => 'Finance Bldg',
+        'description' => 'Main computer laboratory on 3rd floor',
+        'icon'        => 'bi-bank',
+        'rooms'       => ['Comlab 1','Comlab 2','Comlab 3','Comlab 4','Comlab 5','Comlab 6','Comlab 7','Comlab 11','Comlab 12'],
+        'color'       => '#1a7a5e',
+        'pale'        => '#e8f8f4',
+    ],
 ];
 
+// Room layout per building (positions as % within their floor map)
+$roomLayouts = [
+    'highschool' => [
+        ['label' => 'Comlab 8',  'style' => 'left:15%;top:15%;width:28%;height:28%;'],
+        ['label' => 'Comlab 9',  'style' => 'left:15%;top:50%;width:28%;height:28%;'],
+        ['label' => 'Comlab 10', 'style' => 'left:57%;top:15%;width:28%;height:63%;'],
+    ],
+    'finance' => [
+        ['label' => 'Comlab 1',  'style' => 'left:71.5%;top:19%;width:11%;height:17%;'],
+        ['label' => 'Comlab 2',  'style' => 'left:71.5%;top:36%;width:11%;height:17%;'],
+        ['label' => 'Comlab 3',  'style' => 'left:71.5%;top:53%;width:11%;height:17%;'],
+        ['label' => 'Comlab 4',  'style' => 'left:70%;top:84%;width:11%;height:14%;'],
+        ['label' => 'Comlab 5',  'style' => 'left:61%;top:84%;width:9%;height:14%;'],
+        ['label' => 'Comlab 6',  'style' => 'left:52%;top:84%;width:9%;height:14%;'],
+        ['label' => 'Comlab 7',  'style' => 'left:43%;top:84%;width:9%;height:14%;'],
+        ['label' => 'Comlab 11', 'style' => 'left:8.5%;top:84%;width:10%;height:14%;'],
+        ['label' => 'Comlab 12', 'style' => 'left:8.5%;top:70%;width:10%;height:14%;'],
+    ],
+];
+
+// ── Fetch rooms from DB ───────────────────────────────────────────────
 $rooms = [];
 $roomsByLabel = [];
 $sqlRooms = "SELECT id, room_code, room_name, status, capacity FROM rooms WHERE room_name LIKE 'Comlab %' OR room_code LIKE 'COMLAB%' ORDER BY room_name ASC";
 $roomResult = $conn->query($sqlRooms);
-
 if ($roomResult instanceof mysqli_result) {
     while ($row = $roomResult->fetch_assoc()) {
         $label = trim($row['room_name']) !== '' ? $row['room_name'] : $row['room_code'];
@@ -49,21 +79,19 @@ if ($roomResult instanceof mysqli_result) {
     }
 }
 
+// Auto-seed rooms if DB is empty
 if (count($rooms) === 0) {
     $buildingId = 0;
     $buildingResult = $conn->query("SELECT id FROM buildings ORDER BY id ASC LIMIT 1");
     if ($buildingResult instanceof mysqli_result && $buildingRow = $buildingResult->fetch_assoc()) {
         $buildingId = (int) $buildingRow['id'];
     } else {
-        $insertBuilding = $conn->prepare("INSERT INTO buildings (code, name, description) VALUES ('COMLAB', 'Computer Laboratory Building', 'Auto-generated building for comlab schedules')");
+        $insertBuilding = $conn->prepare("INSERT INTO buildings (code, name, description) VALUES ('COMLAB', 'Computer Laboratory Building', 'Auto-generated')");
         if ($insertBuilding && $insertBuilding->execute()) {
             $buildingId = (int) $conn->insert_id;
         }
-        if ($insertBuilding) {
-            $insertBuilding->close();
-        }
+        if ($insertBuilding) $insertBuilding->close();
     }
-
     if ($buildingId > 0) {
         $insertRoom = $conn->prepare("INSERT INTO rooms (building_id, room_code, room_name, capacity, status, description) VALUES (?, ?, ?, 40, 'available', 'Auto-generated comlab')");
         if ($insertRoom) {
@@ -76,7 +104,6 @@ if (count($rooms) === 0) {
             $insertRoom->close();
         }
     }
-
     $roomResult = $conn->query($sqlRooms);
     if ($roomResult instanceof mysqli_result) {
         while ($row = $roomResult->fetch_assoc()) {
@@ -89,39 +116,45 @@ if (count($rooms) === 0) {
 }
 
 $roomById = [];
-foreach ($roomLayout as $index => $layoutRoom) {
-    $key = strtolower($layoutRoom['label']);
-    if (isset($roomsByLabel[$key])) {
-        $roomById[(int) $roomsByLabel[$key]['id']] = $roomsByLabel[$key];
-        continue;
-    }
-    $fallback = [
-        'id' => -($index + 1),
-        'room_code' => 'COMLAB-' . ($index + 1),
-        'room_name' => $layoutRoom['label'],
-        'status' => 'available',
-        'capacity' => 30,
-        'display_label' => $layoutRoom['label'],
-    ];
-    $roomById[$fallback['id']] = $fallback;
+foreach ($roomsByLabel as $lbl => $rd) {
+    $roomById[(int)$rd['id']] = $rd;
 }
 
+// ── Determine current view ────────────────────────────────────────────
+if ($selectedRoomId > 0 && isset($roomById[$selectedRoomId]) && $selectedBuilding === null) {
+    $rName = $roomById[$selectedRoomId]['display_label'];
+    foreach ($buildings as $bKey => $bDef) {
+        if (in_array($rName, $bDef['rooms'], true)) {
+            $selectedBuilding = $bKey;
+            break;
+        }
+    }
+}
+
+$currentBuildingDef = $selectedBuilding ? ($buildings[$selectedBuilding] ?? null) : null;
+$currentLayout      = $selectedBuilding ? ($roomLayouts[$selectedBuilding] ?? []) : [];
+
+// ── Selected room & its schedules ────────────────────────────────────
 $selectedRoom = null;
-if ($selectedRoomId !== 0 && isset($roomById[$selectedRoomId])) {
+if ($selectedRoomId > 0 && isset($roomById[$selectedRoomId])) {
     $selectedRoom = $roomById[$selectedRoomId];
-} else {
-    $selectedRoom = reset($roomById);
-    $selectedRoomId = (int) $selectedRoom['id'];
+} elseif ($selectedBuilding && !empty($currentLayout)) {
+    $firstLabel = strtolower($currentLayout[0]['label']);
+    if (isset($roomsByLabel[$firstLabel])) {
+        $selectedRoom = $roomsByLabel[$firstLabel];
+        $selectedRoomId = (int)$selectedRoom['id'];
+    }
 }
 
 $selectedSchedule = [];
 if ($selectedRoomId > 0) {
     $stmt = $conn->prepare(
-        "SELECT s.id, s.subject, s.section, s.day_of_week, s.time_start, s.time_end, s.status, u.name AS instructor_name, s.instructor_id
+        "SELECT s.id, s.subject, s.section, s.day_of_week, s.time_start, s.time_end, s.status,
+                u.name AS instructor_name, s.instructor_id
          FROM schedules s
          INNER JOIN users u ON u.id = s.instructor_id
          WHERE s.room_id = ?
-         ORDER BY FIELD(s.day_of_week, 'Monday and Thursday','Tuesday and Wednesday'), s.time_start"
+         ORDER BY FIELD(s.day_of_week,'Monday and Thursday','Tuesday and Wednesday'), s.time_start"
     );
     $stmt->bind_param('i', $selectedRoomId);
     $stmt->execute();
@@ -129,18 +162,13 @@ if ($selectedRoomId > 0) {
     $stmt->close();
 }
 
+// ── Live availability (today) — sidebar left ──────────────────────────
 $todayRooms = [];
 $todaySql = "SELECT r.id, r.room_name, r.status,
-            EXISTS(
-                SELECT 1 FROM schedules s
-                WHERE s.room_id = r.id
-                  AND s.day_of_week = ?
-                  AND CURTIME() BETWEEN s.time_start AND s.time_end
-                  AND s.status <> 'cancelled'
-            ) AS is_busy
-            FROM rooms r
-            WHERE r.room_name LIKE 'Comlab %'
-            ORDER BY r.room_name ASC";
+             EXISTS(SELECT 1 FROM schedules s WHERE s.room_id = r.id
+               AND s.day_of_week = ? AND CURTIME() BETWEEN s.time_start AND s.time_end
+               AND s.status <> 'cancelled') AS is_busy
+             FROM rooms r WHERE r.room_name LIKE 'Comlab %' ORDER BY r.room_name ASC";
 $todayStmt = $conn->prepare($todaySql);
 if ($todayStmt) {
     $todayStmt->bind_param('s', $today);
@@ -149,22 +177,27 @@ if ($todayStmt) {
     $todayStmt->close();
 }
 
-$todaySchedule = [];
-if ($isLoggedIn && $role === 'instructor') {
-    $todayStmt = $conn->prepare(
-        "SELECT s.subject, s.section, s.time_start, s.time_end, r.room_name
-         FROM schedules s
-         INNER JOIN rooms r ON r.id = s.room_id
-         WHERE s.instructor_id = ? AND s.day_of_week = ? AND s.status <> 'cancelled'
-         ORDER BY s.time_start ASC"
-    );
-    $todayStmt->bind_param('is', $userId, $today);
-    $todayStmt->execute();
-    $todaySchedule = $todayStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $todayStmt->close();
+// ── Schedule counts per room (for badges) ────────────────────────────
+$schedCountMap = [];
+$schedCountRes = $conn->query("SELECT room_id, COUNT(*) as cnt FROM schedules WHERE status <> 'cancelled' GROUP BY room_id");
+if ($schedCountRes instanceof mysqli_result) {
+    while ($scr = $schedCountRes->fetch_assoc()) {
+        $schedCountMap[(int)$scr['room_id']] = (int)$scr['cnt'];
+    }
 }
 
-// Instructors list for admin add-schedule dropdown
+// ── Building schedule counts ──────────────────────────────────────────
+$buildingSchedCount = ['highschool' => 0, 'finance' => 0];
+foreach ($buildings as $bKey => $bDef) {
+    foreach ($bDef['rooms'] as $rName) {
+        $rData = $roomsByLabel[strtolower($rName)] ?? null;
+        if ($rData) {
+            $buildingSchedCount[$bKey] += $schedCountMap[(int)$rData['id']] ?? 0;
+        }
+    }
+}
+
+// ── Instructor list (admin) ───────────────────────────────────────────
 $instructors = [];
 if ($role === 'admin') {
     $insRes = $conn->query("SELECT id, name FROM users WHERE role IN ('instructor','admin') ORDER BY name ASC");
@@ -173,7 +206,7 @@ if ($role === 'admin') {
     }
 }
 
-// Build allSchedulesJson for map search highlight
+// ── All schedules JSON for map search ────────────────────────────────
 $allSchedRaw = $conn->query(
     "SELECT s.subject, s.section, u.name AS instructor_name, r.id AS room_id
      FROM schedules s
@@ -185,7 +218,7 @@ $allSchedulesForSearch = [];
 if ($allSchedRaw instanceof mysqli_result) {
     while ($sr = $allSchedRaw->fetch_assoc()) {
         $rid = (int)$sr['room_id'];
-        $allSchedulesForSearch[$rid][] = strtolower($sr['subject'] . ' ' . $sr['section'] . ' ' . $sr['instructor_name']);
+        $allSchedulesForSearch[$rid][] = strtolower($sr['subject'].' '.$sr['section'].' '.$sr['instructor_name']);
     }
 }
 $allSchedulesJson = json_encode($allSchedulesForSearch);
@@ -206,199 +239,255 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     <style><?= $comlabCssInline ?></style>
   <?php endif; ?>
   <style>
-    body.page-comlab-map {
-      --sidebar-w: 220px;
-      --right-w: 320px;
-    }
+    body { overflow: hidden; }
+    body.page-comlab-map { --sidebar-w: 220px; --right-w: 320px; }
+
+    /* ── Sidebar left nav ── */
     .sidebar-live-region {
-      border: 1px solid var(--border, #C8DFF0);
+      border: 1px solid var(--border,#C8DFF0);
       border-radius: 10px;
-      background: var(--navy-pale, #F4F8FD);
-      padding: 0.75rem 0.65rem;
+      background: var(--navy-pale,#F4F8FD);
+      padding: .75rem .65rem;
     }
-    .sidebar-live-region .panel-title-live {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--muted, #5A7A96);
-      margin-bottom: 0.5rem;
+    .panel-title-live {
+      font-size: 11px; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--muted,#5A7A96); margin-bottom: .5rem;
     }
-    .sidebar-live-caption {
-      font-size: 11px;
-      color: var(--muted, #5A7A96);
-      line-height: 1.35;
-      margin-bottom: 0.5rem;
-    }
+    .sidebar-live-caption { font-size: 11px; color: var(--muted,#5A7A96); margin-bottom: .5rem; }
     .sidebar-live-scroll {
-      max-height: min(38vh, 320px);
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding-right: 2px;
-    }
-    .sidebar-live-scroll:focus-visible {
-      outline: 2px solid var(--accent, #378ADD);
-      outline-offset: 2px;
+      max-height: min(32vh,260px); overflow-y: auto; overscroll-behavior: contain;
+      display: flex; flex-direction: column; gap: 4px; padding-right: 2px;
     }
     .live-availability-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 8px 8px;
-      font-size: 12px;
-      border-radius: 8px;
-      background: var(--white, #fff);
-      border: 1px solid var(--border, #C8DFF0);
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 8px; font-size: 12px; border-radius: 8px;
+      background: var(--white,#fff); border: 1px solid var(--border,#C8DFF0);
     }
-    .live-availability-row .live-room-name {
-      color: var(--text, #0D1B2A);
-      font-weight: 500;
-      line-height: 1.25;
-    }
-    .live-status-pair {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .live-status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
+    .live-room-name { color: var(--text,#0D1B2A); font-weight: 500; }
+    .live-status-pair { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .live-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .live-status-dot.live-free { background: #1D9E75; }
     .live-status-dot.live-busy { background: #E24B4A; }
-    .live-status-dot.live-out { background: #94a3b8; }
-    .live-status-label {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--muted, #5A7A96);
-      max-width: 88px;
-      text-align: right;
-      line-height: 1.2;
+    .live-status-dot.live-out  { background: #94a3b8; }
+    .live-status-label { font-size: 11px; font-weight: 600; color: var(--muted,#5A7A96); text-align: right; }
+
+    /* ── Topbar search ── */
+    .topbar-search-wrap { flex: 1; display: flex; align-items: center; max-width: 340px; }
+    .topbar-search-box {
+      display: flex; align-items: center; gap: 7px; width: 100%;
+      border: 1px solid var(--border,#C8DFF0); border-radius: 20px;
+      padding: 5px 12px; background: var(--navy-pale,#F4F8FD); transition: border-color .15s;
     }
-    .sidebar-right-inner {
-      display: flex;
-      flex-direction: column;
-      gap: 1.15rem;
+    .topbar-search-box:focus-within { border-color: var(--accent,#378ADD); }
+    .topbar-search-box input {
+      border: none; background: transparent; font-size: 13px;
+      font-family: 'DM Sans',sans-serif; color: var(--text,#0D1B2A); outline: none; flex: 1;
     }
-    .selected-room-card span + span {
-      margin-top: 2px;
+    .topbar-search-box input::placeholder { color: var(--muted,#5A7A96); }
+    .map-search-clear {
+      border: none; background: transparent; color: var(--muted,#5A7A96);
+      cursor: pointer; padding: 0; line-height: 1; display: flex; align-items: center; font-size: 15px;
     }
-    .selected-room-title {
-      font-size: 1rem;
-      line-height: 1.3;
-      margin-bottom: 2px;
+    .map-search-clear:hover { color: var(--text,#0D1B2A); }
+
+    /* ═══════════════════════════════════════════
+       LEVEL 1 — Campus view
+    ═══════════════════════════════════════════ */
+    .campus-view {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2rem; gap: 1.5rem; overflow-y: auto;
     }
-    .admin-room-status-form .form-select {
-      min-width: 0;
-      flex: 1 1 120px;
+    .campus-heading { text-align: center; }
+    .campus-heading h2 { font-size: 1.1rem; font-weight: 700; color: var(--navy,#042C53); margin: 0 0 4px; }
+    .campus-heading p  { font-size: 12px; color: var(--muted,#5A7A96); margin: 0; }
+    .campus-buildings-grid {
+      display: flex; gap: 1.5rem; flex-wrap: wrap;
+      justify-content: center; width: 100%; max-width: 680px;
     }
-    .schedule-form-stack .form-label {
-      font-weight: 600;
-      margin-bottom: 4px;
+    .building-card {
+      flex: 1; min-width: 240px; max-width: 300px;
+      background: var(--white,#fff); border: 1.5px solid var(--border,#C8DFF0);
+      border-radius: 14px; padding: 1.5rem 1.25rem;
+      text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; gap: 12px;
+      transition: transform .18s, box-shadow .18s, border-color .18s;
+      cursor: pointer; position: relative; overflow: hidden;
     }
-    /* Fallback map styles in case external CSS is cached/missing */
-    .comlab-map-container { max-width: 820px; aspect-ratio: 4 / 3; padding: 1rem; display: flex; flex-direction: column; gap: 10px; }
-    .comlab-map-grid { width: 100%; height: 100%; min-height: 420px; position: relative; background: #d9f0f0; border: 2px solid #173049; border-radius: 8px; padding: 10px; overflow: hidden; }
-    .comlab-tile { position: absolute; border: 2px solid #173049; border-radius: 4px; color: #0d1b2a; text-decoration: none; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-align: center; padding: 4px; transition: transform 0.12s ease, box-shadow 0.12s ease; z-index: 3; }
-    .comlab-tile:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(4, 44, 83, 0.18); }
-    .comlab-tile.active { outline: 3px solid #185fa5; }
+    .building-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 4px; border-radius: 14px 14px 0 0;
+    }
+    .building-card.hs-card::before  { background: #1a6b9a; }
+    .building-card.fin-card::before { background: #1a7a5e; }
+    .building-card:hover {
+      transform: translateY(-3px); box-shadow: 0 8px 28px rgba(4,44,83,.13);
+      border-color: var(--accent,#378ADD); text-decoration: none; color: inherit;
+    }
+    .building-card-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .hs-card  .building-card-icon { background: #e8f4fb; color: #1a6b9a; }
+    .fin-card .building-card-icon { background: #e8f8f4; color: #1a7a5e; }
+    .building-card-body { flex: 1; }
+    .building-card-name { font-size: 15px; font-weight: 700; color: var(--navy,#042C53); margin: 0 0 3px; }
+    .building-card-desc { font-size: 12px; color: var(--muted,#5A7A96); margin: 0; }
+    .building-card-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .building-meta-chip {
+      font-size: 11px; font-weight: 600; padding: 3px 9px;
+      border-radius: 20px; background: var(--navy-pale,#F4F8FD);
+      color: var(--navy,#042C53); border: 1px solid var(--border,#C8DFF0);
+    }
+    .building-card-arrow {
+      position: absolute; right: 1.1rem; top: 50%; transform: translateY(-50%);
+      font-size: 18px; color: var(--border,#C8DFF0); transition: color .15s, transform .15s;
+    }
+    .building-card:hover .building-card-arrow {
+      color: var(--accent,#378ADD); transform: translateY(-50%) translateX(3px);
+    }
+
+    /* ═══════════════════════════════════════════
+       LEVEL 2 — Building floor view
+    ═══════════════════════════════════════════ */
+    .floor-view {
+      flex: 1; display: flex; flex-direction: column;
+      overflow: hidden; padding: .75rem 1rem; gap: .65rem;
+    }
+    .floor-breadcrumb {
+      display: flex; align-items: center; gap: 8px; font-size: 12px; flex-shrink: 0;
+    }
+    .floor-breadcrumb a {
+      color: var(--accent,#378ADD); text-decoration: none; font-weight: 600;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .floor-breadcrumb a:hover { text-decoration: underline; }
+    .floor-breadcrumb .bc-sep { color: var(--muted,#5A7A96); }
+    .floor-breadcrumb .bc-current { color: var(--navy,#042C53); font-weight: 700; }
+
+    /* Map container */
+    .comlab-map-container {
+      flex: 1; display: flex; flex-direction: column; gap: 8px;
+      overflow: hidden; min-height: 0;
+    }
+    .map-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--muted,#5A7A96); flex-shrink: 0;
+    }
+    .comlab-map-grid {
+      flex: 1; position: relative;
+      background: #d9f0f0; border: 2px solid #173049;
+      border-radius: 8px; padding: 10px; overflow: hidden; min-height: 0;
+    }
+    .map-grid-hs { background: #ddf0ea; }
+
+    /* ── Tile base ── */
+    .comlab-tile {
+      position: absolute; border: 2px solid #173049; border-radius: 6px;
+      color: #0d1b2a; text-decoration: none; font-size: 13px; font-weight: 600;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center; padding: 4px 6px; gap: 2px;
+      transition: transform .12s, box-shadow .12s, opacity .2s, filter .2s;
+      z-index: 3;
+    }
+    .comlab-tile:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(4,44,83,.18); }
+    .comlab-tile.active { outline: 3px solid #185fa5; outline-offset: 1px; }
+
+    /* Status colours — set by PHP on load, overridden by JS live polling */
     .status-free { background: #e7f8f1; }
     .status-busy { background: #fce9e9; }
-    .status-out { background: #eeeeee; color: #737373; }
-    .center-walkway { position: absolute; border: 2px solid #173049; background: #f3f3f3; border-radius: 4px; font-weight: 600; color: #5a7a96; display: flex; align-items: center; justify-content: center; z-index: 1; }
-    .map-legend { display: flex; gap: 14px; align-items: center; justify-content: center; font-size: 12px; color: #5a7a96; font-weight: 600; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; border: 1px solid #17304933; }
+    .status-out  { background: #eee; color: #737373; }
+
+    .tile-dim   { opacity: .28; filter: grayscale(60%); }
+    .tile-match { opacity: 1; filter: none; box-shadow: 0 0 0 3px #378ADD, 0 4px 16px rgba(55,138,221,.35); z-index: 10; }
+
+    /* Schedule badge on tile */
+    .tile-sched-badge {
+      font-size: 10px; font-weight: 700;
+      background: rgba(4,44,83,.12); border-radius: 10px;
+      padding: 1px 6px; line-height: 1.4;
+    }
+
+    /* ── Live label on tile (feature #4) ── */
+    .tile-live-label {
+      font-size: 9px; font-weight: 700; opacity: .75;
+      line-height: 1.2; text-align: center;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* ── Map legend + live refresh bar ── */
+    .map-legend-wrap {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+      justify-content: space-between; flex-shrink: 0;
+    }
+    .map-legend {
+      display: flex; gap: 14px; align-items: center;
+      font-size: 12px; color: #5a7a96; font-weight: 600;
+    }
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      display: inline-block; margin-right: 5px; border: 1px solid #17304933;
+    }
     .legend-available { background: #e7f8f1; }
-    .legend-occupied { background: #fce9e9; }
-    .legend-out { background: #eeeeee; }
-    /* ── No-scroll body ── */
-    body { overflow: hidden; }
-    /* ── Compact right sidebar ── */
-    .sidebar-right { padding: 0.75rem 0.85rem; gap: 0.6rem; }
+    .legend-occupied  { background: #fce9e9; }
+    .legend-out       { background: #eee; }
+
+    /* Live refresh indicator */
+    .live-refresh-bar {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--muted,#5A7A96); flex-shrink: 0;
+    }
+    .live-refresh-pulse {
+      width: 8px; height: 8px; border-radius: 50%; background: #1D9E75;
+      animation: livePulse 2s infinite; flex-shrink: 0;
+    }
+    @keyframes livePulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: .2; }
+    }
+
+    .center-walkway {
+      position: absolute; border: 2px solid #173049;
+      background: #f3f3f3; border-radius: 4px;
+      font-weight: 600; color: #5a7a96;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; z-index: 1;
+    }
+
+    /* ── Right sidebar ── */
+    .sidebar-right { padding: .75rem .85rem; gap: .6rem; }
+    .sidebar-right-inner { display: flex; flex-direction: column; gap: .6rem; }
     .panel-title { margin-bottom: 3px; }
     .schedule-item { padding: 6px 10px; }
-    .sidebar-right-inner { gap: 0.6rem; }
-    /* Cap the schedule list so Add Schedule form always fits */
     .full-room-schedule-list { max-height: 26vh !important; overflow-y: auto; }
-    .schedule-form-stack .form-label, .schedule-form .form-label { font-size: 11px; margin-bottom: 1px; }
-    /* ── Topbar search bar ── */
-    .topbar-search-wrap {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      max-width: 340px;
-    }
-    .topbar-search-box {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      width: 100%;
-      border: 1px solid var(--border, #C8DFF0);
-      border-radius: 20px;
-      padding: 5px 12px;
-      background: var(--navy-pale, #F4F8FD);
-      transition: border-color 0.15s;
-    }
-    .topbar-search-box:focus-within { border-color: var(--accent, #378ADD); }
-    .topbar-search-box input {
-      border: none;
-      background: transparent;
-      font-size: 13px;
-      font-family: 'DM Sans', sans-serif;
-      color: var(--text, #0D1B2A);
-      outline: none;
-      flex: 1;
-      min-width: 0;
-    }
-    .topbar-search-box input::placeholder { color: var(--muted, #5A7A96); }
-    .map-search-clear {
-      border: none;
-      background: transparent;
-      color: var(--muted, #5A7A96);
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      font-size: 15px;
-    }
-    .map-search-clear:hover { color: var(--text, #0D1B2A); }
-    /* ── Tile highlight / dim ── */
-    .comlab-tile { transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.2s ease, filter 0.2s ease; }
-    .comlab-tile.tile-dim {
-      opacity: 0.28;
-      filter: grayscale(60%);
-    }
-    .comlab-tile.tile-match {
-      opacity: 1;
-      filter: none;
-      box-shadow: 0 0 0 3px #378ADD, 0 4px 16px rgba(55,138,221,0.35);
-      z-index: 10;
-    }
+    .schedule-form-stack .form-label,
+    .schedule-form .form-label { font-size: 11px; margin-bottom: 1px; }
+    .admin-room-status-form .form-select { min-width: 0; flex: 1 1 120px; }
+
+    /* Campus-mode hides right sidebar */
+    .campus-mode .sidebar-right { display: none !important; }
   </style>
 </head>
-<body class="page-comlab-map">
+<body class="page-comlab-map <?= $selectedBuilding ? '' : 'campus-mode' ?>">
+
+  <!-- ── Topbar ── -->
   <header class="topbar">
     <a class="topbar-brand" href="comlab-map.php">
       <div class="logo-mark">Bu</div>
       BukSU Rooms
     </a>
 
-    <!-- Map search bar -->
+    <?php if ($selectedBuilding): ?>
     <div class="topbar-search-wrap">
       <div class="topbar-search-box">
         <i class="bi bi-search" style="font-size:13px;color:var(--muted);"></i>
         <input type="text" id="mapSearch" placeholder="Search section, subject, or instructor…" autocomplete="off">
-        <button type="button" id="mapSearchClear" class="map-search-clear" style="display:none;" aria-label="Clear search"><i class="bi bi-x"></i></button>
+        <button type="button" id="mapSearchClear" class="map-search-clear" style="display:none;" aria-label="Clear search">
+          <i class="bi bi-x"></i>
+        </button>
       </div>
     </div>
+    <?php endif; ?>
 
     <div class="topbar-stats">
       <div class="stat-chip">
@@ -425,7 +514,10 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     </div>
   </header>
 
+  <!-- ── Body layout ── -->
   <div class="body-layout">
+
+    <!-- Left sidebar -->
     <aside class="sidebar-left" aria-label="Main navigation">
       <div>
         <p class="nav-section-label">Navigation</p>
@@ -447,30 +539,24 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
         <?php endif; ?>
       </div>
 
-      <nav class="sidebar-live-region" aria-labelledby="live-availability-heading">
-        <h2 id="live-availability-heading" class="panel-title-live mb-1">Live availability</h2>
-        <p class="sidebar-live-caption mb-2" id="live-availability-caption">Today (<?= htmlspecialchars($today) ?>) · comlabs</p>
-        <div class="sidebar-live-scroll" role="region" tabindex="0" aria-describedby="live-availability-caption">
+      <nav class="sidebar-live-region mt-2" aria-labelledby="live-heading">
+        <h2 id="live-heading" class="panel-title-live">Live availability</h2>
+        <p class="sidebar-live-caption">Today (<?= htmlspecialchars($today) ?>)</p>
+        <div class="sidebar-live-scroll" id="sidebarLiveScroll" tabindex="0">
           <?php if (empty($todayRooms)): ?>
             <small class="text-muted px-1">No room data loaded.</small>
           <?php else: ?>
             <?php foreach ($todayRooms as $liveRoom): ?>
               <?php
-                $liveStatusClass = 'live-free';
-                $liveStatusLabel = 'Free';
-                if (($liveRoom['status'] ?? '') === 'out_of_service') {
-                    $liveStatusClass = 'live-out';
-                    $liveStatusLabel = 'Out of service';
-                } elseif ((int) $liveRoom['is_busy'] === 1 || ($liveRoom['status'] ?? '') === 'occupied') {
-                    $liveStatusClass = 'live-busy';
-                    $liveStatusLabel = 'Occupied';
-                }
+                $lsc = 'live-free'; $lsl = 'Free';
+                if (($liveRoom['status'] ?? '') === 'out_of_service')       { $lsc = 'live-out';  $lsl = 'Out of service'; }
+                elseif ((int)$liveRoom['is_busy'] === 1 || ($liveRoom['status'] ?? '') === 'occupied') { $lsc = 'live-busy'; $lsl = 'Occupied'; }
               ?>
-              <div class="live-availability-row">
+              <div class="live-availability-row" data-sidebar-room-id="<?= (int)$liveRoom['id'] ?>">
                 <span class="live-room-name"><?= htmlspecialchars($liveRoom['room_name']) ?></span>
                 <div class="live-status-pair">
-                  <span class="live-status-dot <?= $liveStatusClass ?>" aria-hidden="true"></span>
-                  <span class="live-status-label"><?= htmlspecialchars($liveStatusLabel) ?></span>
+                  <span class="live-status-dot <?= $lsc ?>"></span>
+                  <span class="live-status-label"><?= htmlspecialchars($lsl) ?></span>
                 </div>
               </div>
             <?php endforeach; ?>
@@ -491,203 +577,268 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
       </div>
     </aside>
 
-    <main class="main-content">
-      <div class="map-container comlab-map-container">
-        <span class="map-label">Comlab Floor Map</span>
-        <div class="comlab-map-grid" id="comlabMapGrid">
-          <?php foreach ($roomLayout as $layout): ?>
-            <?php
-            $label = strtolower($layout['label']);
-            $roomData = $roomsByLabel[$label] ?? null;
-            if (!$roomData) {
-                foreach ($roomById as $fallbackRoom) {
-                    if (strtolower($fallbackRoom['display_label']) === $label) {
-                        $roomData = $fallbackRoom;
-                        break;
-                    }
-                }
-            }
-            if (!$roomData) { continue; }
-            $isActiveRoom = ((int) $roomData['id'] === $selectedRoomId);
-            $statusClass = $roomData['status'] === 'out_of_service' ? 'status-out' : ($roomData['status'] === 'occupied' ? 'status-busy' : 'status-free');
-            ?>
-            <a class="comlab-tile <?= $layout['slot'] ?> <?= $statusClass ?> <?= $isActiveRoom ? 'active' : '' ?>"
-               style="<?= htmlspecialchars($layout['style']) ?>"
-               href="comlab-map.php?room_id=<?= (int) $roomData['id'] ?>"
-               data-room-id="<?= (int) $roomData['id'] ?>">
-              <span><?= htmlspecialchars($roomData['display_label']) ?></span>
-            </a>
-          <?php endforeach; ?>
-          <div class="center-walkway" style="left:24%;top:20%;width:41%;height:56%;">Map Center</div>
-        </div>
-        <div class="map-legend">
-          <span><i class="legend-dot legend-available"></i> Available</span>
-          <span><i class="legend-dot legend-occupied"></i> Occupied</span>
-          <span><i class="legend-dot legend-out"></i> Out of Service</span>
-        </div>
+    <!-- ══════════════════════════════════════
+         LEVEL 1 — Campus view (no building selected)
+    ══════════════════════════════════════ -->
+    <?php if (!$selectedBuilding): ?>
+    <main class="main-content campus-view">
+      <div class="campus-heading">
+        <h2><i class="bi bi-geo-alt me-2"></i>Select a Building</h2>
+        <p>Click a building to view its computer laboratories</p>
+      </div>
+
+      <div class="campus-buildings-grid">
+        <?php foreach ($buildings as $bKey => $bDef):
+          $cardClass  = $bKey === 'highschool' ? 'hs-card' : 'fin-card';
+          $roomCount  = count($bDef['rooms']);
+          $schedCount = $buildingSchedCount[$bKey];
+          $availCount = 0;
+          foreach ($bDef['rooms'] as $rn) {
+              $rd = $roomsByLabel[strtolower($rn)] ?? null;
+              if ($rd && $rd['status'] === 'available') $availCount++;
+          }
+        ?>
+        <a href="comlab-map.php?building=<?= $bKey ?>" class="building-card <?= $cardClass ?>">
+          <div class="building-card-icon">
+            <i class="bi <?= $bDef['icon'] ?>"></i>
+          </div>
+          <div class="building-card-body">
+            <p class="building-card-name"><?= htmlspecialchars($bDef['name']) ?></p>
+            <p class="building-card-desc"><?= htmlspecialchars($bDef['description']) ?></p>
+          </div>
+          <div class="building-card-meta">
+            <span class="building-meta-chip"><i class="bi bi-display me-1"></i><?= $roomCount ?> Rooms</span>
+            <span class="building-meta-chip"><i class="bi bi-check-circle me-1"></i><?= $availCount ?> Available</span>
+            <?php if ($schedCount > 0): ?>
+              <span class="building-meta-chip"><i class="bi bi-calendar3 me-1"></i><?= $schedCount ?> Schedules</span>
+            <?php endif; ?>
+          </div>
+          <i class="bi bi-chevron-right building-card-arrow"></i>
+        </a>
+        <?php endforeach; ?>
       </div>
     </main>
 
+    <?php else: ?>
+    <!-- ══════════════════════════════════════
+         LEVEL 2 — Floor map view
+    ══════════════════════════════════════ -->
+    <main class="main-content floor-view">
+
+      <!-- Breadcrumb -->
+      <div class="floor-breadcrumb">
+        <a href="comlab-map.php"><i class="bi bi-geo-alt"></i> Campus</a>
+        <span class="bc-sep"><i class="bi bi-chevron-right" style="font-size:10px;"></i></span>
+        <span class="bc-current"><?= htmlspecialchars($currentBuildingDef['name']) ?></span>
+      </div>
+
+      <!-- Map -->
+      <div class="comlab-map-container">
+        <span class="map-label">
+          <i class="bi <?= $currentBuildingDef['icon'] ?> me-1"></i>
+          <?= htmlspecialchars($currentBuildingDef['name']) ?> — Floor Map
+        </span>
+
+        <div class="comlab-map-grid <?= $selectedBuilding === 'highschool' ? 'map-grid-hs' : '' ?>" id="comlabMapGrid">
+
+          <?php foreach ($currentLayout as $layout):
+            $label    = strtolower($layout['label']);
+            $roomData = $roomsByLabel[$label] ?? null;
+            if (!$roomData) continue;
+            $isActive    = ((int)$roomData['id'] === $selectedRoomId);
+            $statusClass = $roomData['status'] === 'out_of_service' ? 'status-out'
+                         : ($roomData['status'] === 'occupied'      ? 'status-busy' : 'status-free');
+            $schedCnt    = $schedCountMap[(int)$roomData['id']] ?? 0;
+          ?>
+            <a class="comlab-tile <?= $statusClass ?> <?= $isActive ? 'active' : '' ?>"
+               style="<?= htmlspecialchars($layout['style']) ?>"
+               href="comlab-map.php?building=<?= $selectedBuilding ?>&room_id=<?= (int)$roomData['id'] ?>"
+               data-room-id="<?= (int)$roomData['id'] ?>">
+              <span><?= htmlspecialchars($roomData['display_label']) ?></span>
+              <?php if ($schedCnt > 0): ?>
+                <span class="tile-sched-badge"><?= $schedCnt ?> sched<?= $schedCnt > 1 ? 's' : '' ?></span>
+              <?php endif; ?>
+              <!-- Live status label — populated & updated by JS polling (feature #4) -->
+              <span class="tile-live-label"></span>
+            </a>
+          <?php endforeach; ?>
+
+          <?php if ($selectedBuilding === 'finance'): ?>
+            <div class="center-walkway" style="left:24%;top:20%;width:41%;height:56%;">Walkway / Center</div>
+          <?php elseif ($selectedBuilding === 'highschool'): ?>
+            <div class="center-walkway" style="left:15%;top:82%;width:70%;height:10%;">Corridor</div>
+          <?php endif; ?>
+        </div>
+
+        <!-- Legend + live refresh indicator -->
+        <div class="map-legend-wrap">
+          <div class="map-legend">
+            <span><i class="legend-dot legend-available"></i> Available</span>
+            <span><i class="legend-dot legend-occupied"></i> Occupied</span>
+            <span><i class="legend-dot legend-out"></i> Out of Service</span>
+          </div>
+          <div class="live-refresh-bar">
+            <span class="live-refresh-pulse" aria-hidden="true"></span>
+            Live &middot; updated <span id="liveRefreshTs">—</span>
+          </div>
+        </div>
+      </div>
+    </main>
+    <?php endif; ?>
+
+    <!-- ── Right sidebar (floor view only) ── -->
+    <?php if ($selectedBuilding && $selectedRoom): ?>
     <aside class="sidebar-right">
       <div class="sidebar-right-inner">
-      <div>
-        <p class="panel-title">Selected room</p>
-        <div class="selected-room-card">
-          <strong class="selected-room-title"><?= htmlspecialchars($selectedRoom['display_label'] ?? 'No room selected') ?></strong>
-          <span class="text-muted small">Status: <?= htmlspecialchars(ucwords(str_replace('_', ' ', $selectedRoom['status'] ?? 'available'))) ?></span>
-          <?php if ($role === 'admin' && $selectedRoomId > 0): ?>
-            <form action="room_status_save.php" method="POST" class="mt-2 d-flex gap-2 flex-wrap align-items-stretch align-items-md-center admin-room-status-form">
-              <input type="hidden" name="room_id" value="<?= (int) $selectedRoomId ?>">
-              <select class="form-select form-select-sm" name="status">
-                <option value="available" <?= ($selectedRoom['status'] ?? '') === 'available' ? 'selected' : '' ?>>Available</option>
-                <option value="occupied" <?= ($selectedRoom['status'] ?? '') === 'occupied' ? 'selected' : '' ?>>Occupied</option>
-                <option value="out_of_service" <?= ($selectedRoom['status'] ?? '') === 'out_of_service' ? 'selected' : '' ?>>Out of Service</option>
-              </select>
-              <button type="submit" class="btn btn-sm btn-outline-secondary">Update</button>
-            </form>
-          <?php endif; ?>
-          <?php
-            $selectedRoomStatus = $selectedRoom['status'] ?? 'available';
-            $roomUnavailableForInstructor = ($role === 'instructor' && in_array($selectedRoomStatus, ['occupied', 'out_of_service'], true));
-          ?>
-          <?php if ($roomUnavailableForInstructor): ?>
-            <div class="alert alert-warning py-2 px-3 small mt-2 mb-0">
-              This room is <?= htmlspecialchars(str_replace('_', ' ', $selectedRoomStatus)) ?>. Instructors cannot add or edit schedules until the room is set to available.
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
 
-      <?php if ($flashMessage): ?>
-        <div class="alert alert-<?= $flashType === 'error' ? 'danger' : 'success' ?> py-2 px-3 small mb-0">
-          <?= htmlspecialchars($flashMessage) ?>
-        </div>
-      <?php endif; ?>
+        <div>
+          <p class="panel-title">Selected room</p>
+          <div class="selected-room-card">
+            <strong class="selected-room-title"><?= htmlspecialchars($selectedRoom['display_label'] ?? '') ?></strong>
+            <span class="text-muted small">Status: <?= htmlspecialchars(ucwords(str_replace('_',' ',$selectedRoom['status'] ?? 'available'))) ?></span>
 
-      <hr class="divider" role="presentation">
+            <?php if ($role === 'admin' && $selectedRoomId > 0): ?>
+              <form action="room_status_save.php" method="POST" class="mt-2 d-flex gap-2 flex-wrap align-items-center admin-room-status-form">
+                <input type="hidden" name="room_id" value="<?= (int)$selectedRoomId ?>">
+                <input type="hidden" name="building" value="<?= htmlspecialchars($selectedBuilding) ?>">
+                <select class="form-select form-select-sm" name="status">
+                  <option value="available"      <?= ($selectedRoom['status'] ?? '') === 'available'      ? 'selected' : '' ?>>Available</option>
+                  <option value="occupied"       <?= ($selectedRoom['status'] ?? '') === 'occupied'       ? 'selected' : '' ?>>Occupied</option>
+                  <option value="out_of_service" <?= ($selectedRoom['status'] ?? '') === 'out_of_service' ? 'selected' : '' ?>>Out of Service</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Update</button>
+              </form>
+            <?php endif; ?>
 
-      <div>
-        <p class="panel-title">Schedule for this room</p>
-        <div class="schedule-list full-room-schedule-list">
-          <?php if (empty($selectedSchedule)): ?>
-            <div class="schedule-item">
-              <span class="subj">No schedules yet.</span>
-              <span class="meta">This comlab is currently open for booking.</span>
-            </div>
-          <?php else: ?>
-            <?php foreach ($selectedSchedule as $row): ?>
-              <div class="schedule-item">
-                <span class="subj"><?= htmlspecialchars($row['subject']) ?><?= $row['section'] ? ' — ' . htmlspecialchars($row['section']) : '' ?></span>
-                <span class="meta"><?= htmlspecialchars($row['day_of_week']) ?> · <?= date('g:i A', strtotime($row['time_start'])) ?> - <?= date('g:i A', strtotime($row['time_end'])) ?></span>
-                <span class="room-tag tag-blue">Instructor: <?= htmlspecialchars($row['instructor_name']) ?></span>
-                <?php if ($canManageSchedules && $selectedRoomId > 0): ?>
-                  <div class="d-flex gap-2 mt-2">
-                    <?php
-                      // Admins can edit any schedule.
-                      // Instructors can only edit their own.
-                      $canEdit = ($role === 'admin') || ($role === 'instructor' && (int)$row['instructor_id'] === $userId);
-                      $roomUnavailForEdit = ($role === 'instructor' && in_array(($selectedRoom['status'] ?? 'available'), ['occupied', 'out_of_service'], true));
-                    ?>
-                    <?php if ($canEdit && !$roomUnavailForEdit): ?>
-                      <button class="btn btn-sm btn-outline-primary edit-btn"
-                              type="button"
-                              data-id="<?= (int) $row['id'] ?>"
-                              data-subject="<?= htmlspecialchars($row['subject']) ?>"
-                              data-section="<?= htmlspecialchars((string) $row['section']) ?>"
-                              data-day="<?= htmlspecialchars($row['day_of_week']) ?>"
-                              data-start="<?= htmlspecialchars($row['time_start']) ?>"
-                              data-end="<?= htmlspecialchars($row['time_end']) ?>"
-                              data-instructor-name="<?= htmlspecialchars($row['instructor_name']) ?>">
-                        Edit
-                      </button>
-                    <?php endif; ?>
-                    <form action="schedule_save.php" method="POST" onsubmit="return confirm('Delete this schedule?');">
-                      <input type="hidden" name="action" value="delete">
-                      <input type="hidden" name="schedule_id" value="<?= (int) $row['id'] ?>">
-                      <input type="hidden" name="room_id" value="<?= (int) $selectedRoomId ?>">
-                      <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
-                    </form>
-                  </div>
-                <?php endif; ?>
+            <?php
+              $selStatus = $selectedRoom['status'] ?? 'available';
+              $roomUnavailable = ($role === 'instructor' && in_array($selStatus, ['occupied','out_of_service'], true));
+            ?>
+            <?php if ($roomUnavailable): ?>
+              <div class="alert alert-warning py-2 px-3 small mt-2 mb-0">
+                This room is <?= htmlspecialchars(str_replace('_',' ',$selStatus)) ?>. Instructors cannot add schedules here.
               </div>
-            <?php endforeach; ?>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <?php if ($flashMessage): ?>
+          <div class="alert alert-<?= $flashType === 'error' ? 'danger' : 'success' ?> py-2 px-3 small mb-0">
+            <?= htmlspecialchars($flashMessage) ?>
+          </div>
+        <?php endif; ?>
+
+        <hr class="divider" role="presentation">
+
+        <div>
+          <p class="panel-title">Schedule for this room</p>
+          <div class="schedule-list full-room-schedule-list">
+            <?php if (empty($selectedSchedule)): ?>
+              <div class="schedule-item">
+                <span class="subj">No schedules yet.</span>
+                <span class="meta">This comlab is currently open for booking.</span>
+              </div>
+            <?php else: ?>
+              <?php foreach ($selectedSchedule as $row): ?>
+                <div class="schedule-item">
+                  <span class="subj"><?= htmlspecialchars($row['subject']) ?><?= $row['section'] ? ' — '.htmlspecialchars($row['section']) : '' ?></span>
+                  <span class="meta"><?= htmlspecialchars($row['day_of_week']) ?> · <?= date('g:i A', strtotime($row['time_start'])) ?> - <?= date('g:i A', strtotime($row['time_end'])) ?></span>
+                  <span class="room-tag tag-blue">Instructor: <?= htmlspecialchars($row['instructor_name']) ?></span>
+                  <?php if ($canManageSchedules && $selectedRoomId > 0): ?>
+                    <?php
+                      $canEdit         = ($role === 'admin') || ($role === 'instructor' && (int)$row['instructor_id'] === $userId);
+                      $roomUnavailEdit = ($role === 'instructor' && in_array($selStatus, ['occupied','out_of_service'], true));
+                    ?>
+                    <div class="d-flex gap-2 mt-2">
+                      <?php if ($canEdit && !$roomUnavailEdit): ?>
+                        <button class="btn btn-sm btn-outline-primary edit-btn" type="button"
+                                data-id="<?= (int)$row['id'] ?>"
+                                data-subject="<?= htmlspecialchars($row['subject']) ?>"
+                                data-section="<?= htmlspecialchars((string)$row['section']) ?>"
+                                data-day="<?= htmlspecialchars($row['day_of_week']) ?>"
+                                data-start="<?= htmlspecialchars($row['time_start']) ?>"
+                                data-end="<?= htmlspecialchars($row['time_end']) ?>"
+                                data-instructor-name="<?= htmlspecialchars($row['instructor_name']) ?>">
+                          Edit
+                        </button>
+                      <?php endif; ?>
+                      <form action="schedule_save.php" method="POST" onsubmit="return confirm('Delete this schedule?');">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="schedule_id" value="<?= (int)$row['id'] ?>">
+                        <input type="hidden" name="room_id" value="<?= (int)$selectedRoomId ?>">
+                        <input type="hidden" name="building" value="<?= htmlspecialchars($selectedBuilding) ?>">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                      </form>
+                    </div>
+                  <?php endif; ?>
+                </div>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <?php if ($canManageSchedules && $selectedRoomId > 0): ?>
+        <hr class="divider" role="presentation">
+        <div>
+          <p class="panel-title">Add schedule</p>
+          <?php if ($roomUnavailable): ?>
+            <div class="alert alert-warning py-2 px-3 small mb-0">This room is currently unavailable.</div>
+          <?php else: ?>
+            <button type="button" class="quick-btn" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+              <i class="bi bi-plus-lg"></i> Add schedule for <?= htmlspecialchars($selectedRoom['display_label'] ?? '') ?>
+            </button>
           <?php endif; ?>
         </div>
-      </div>
-
-      <?php if ($canManageSchedules && $selectedRoomId > 0): ?>
-      <hr class="divider" role="presentation">
-      <div>
-        <p class="panel-title">Add schedule</p>
-        <?php if ($role === 'instructor' && in_array(($selectedRoom['status'] ?? 'available'), ['occupied', 'out_of_service'], true)): ?>
-          <div class="alert alert-warning py-2 px-3 small mb-0">
-            This room is currently unavailable.
-          </div>
-        <?php else: ?>
-          <button type="button" class="quick-btn" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
-            <i class="bi bi-plus-lg"></i> Add schedule for <?= htmlspecialchars($selectedRoom['display_label'] ?? 'this room') ?>
-          </button>
         <?php endif; ?>
-      </div>
-      <?php endif; ?>
 
       </div>
     </aside>
-  </div>
+    <?php endif; ?>
 
-  <?php if ($canManageSchedules): ?>
-    <div class="modal fade" id="editScheduleModal" tabindex="-1" aria-labelledby="editScheduleModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <form method="POST" action="schedule_save.php">
-            <div class="modal-header">
-              <h5 class="modal-title" id="editScheduleModalLabel">Edit schedule</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  </div><!-- /.body-layout -->
+
+  <!-- ── Edit Schedule Modal ── -->
+  <?php if ($canManageSchedules && $selectedBuilding): ?>
+  <div class="modal fade" id="editScheduleModal" tabindex="-1" aria-labelledby="editScheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST" action="schedule_save.php">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editScheduleModalLabel">Edit schedule</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" name="schedule_id" id="edit_schedule_id">
+            <input type="hidden" name="room_id" value="<?= (int)$selectedRoomId ?>">
+            <input type="hidden" name="building" value="<?= htmlspecialchars($selectedBuilding) ?>">
+            <div class="mb-2"><label class="form-label">Subject</label><input type="text" class="form-control" name="subject" id="edit_subject" required></div>
+            <div class="mb-2"><label class="form-label">Section</label><input type="text" class="form-control" name="section" id="edit_section"></div>
+            <div class="mb-2">
+              <label class="form-label">Day</label>
+              <select class="form-select" name="day_of_week" id="edit_day" required>
+                <?php foreach ($days as $day): ?>
+                  <option value="<?= htmlspecialchars($day) ?>"><?= htmlspecialchars($day) ?></option>
+                <?php endforeach; ?>
+              </select>
             </div>
-            <div class="modal-body">
-              <input type="hidden" name="action" value="update">
-              <input type="hidden" name="schedule_id" id="edit_schedule_id">
-              <input type="hidden" name="room_id" value="<?= (int) $selectedRoomId ?>">
-              <div class="mb-2">
-                <label class="form-label">Subject</label>
-                <input type="text" class="form-control" name="subject" id="edit_subject" required>
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Section</label>
-                <input type="text" class="form-control" name="section" id="edit_section">
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Day</label>
-                <select class="form-select" name="day_of_week" id="edit_day" required>
-                  <?php foreach ($days as $day): ?>
-                    <option value="<?= htmlspecialchars($day) ?>"><?= htmlspecialchars($day) ?></option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
-              <div class="row">
-                <div class="col">
-                  <label class="form-label">Start</label>
-                  <input type="time" class="form-control" name="time_start" id="edit_start" required>
-                </div>
-                <div class="col">
-                  <label class="form-label">End</label>
-                  <input type="time" class="form-control" name="time_end" id="edit_end" required>
-                </div>
-              </div>
-              <!-- Preserve original instructor — shown read-only -->
-              <p class="small text-muted mt-2 mb-0">Instructor: <strong id="edit_instructor_display">—</strong></p>
+            <div class="row">
+              <div class="col"><label class="form-label">Start</label><input type="time" class="form-control" name="time_start" id="edit_start" required></div>
+              <div class="col"><label class="form-label">End</label><input type="time" class="form-control" name="time_end" id="edit_end" required></div>
             </div>
-            <div class="modal-footer">
-              <button type="submit" class="btn btn-primary">Save changes</button>
-            </div>
-          </form>
-        </div>
+            <p class="small text-muted mt-2 mb-0">Instructor: <strong id="edit_instructor_display">—</strong></p>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+        </form>
       </div>
     </div>
+  </div>
   <?php endif; ?>
 
-  <?php if ($canManageSchedules && $selectedRoomId > 0): ?>
-  <!-- Add Schedule Modal -->
+  <!-- ── Add Schedule Modal ── -->
+  <?php if ($canManageSchedules && $selectedRoomId > 0 && $selectedBuilding): ?>
   <div class="modal fade" id="addScheduleModal" tabindex="-1" aria-labelledby="addScheduleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -696,19 +847,14 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
             <h5 class="modal-title" id="addScheduleModalLabel">
               <i class="bi bi-plus-lg me-1"></i> Add Schedule — <?= htmlspecialchars($selectedRoom['display_label'] ?? '') ?>
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <input type="hidden" name="action" value="create">
-            <input type="hidden" name="room_id" value="<?= (int) $selectedRoomId ?>">
-            <div class="mb-2">
-              <label class="form-label">Subject</label>
-              <input type="text" class="form-control" name="subject" required autofocus>
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Section</label>
-              <input type="text" class="form-control" name="section" placeholder="e.g. BSIT-2A">
-            </div>
+            <input type="hidden" name="room_id" value="<?= (int)$selectedRoomId ?>">
+            <input type="hidden" name="building" value="<?= htmlspecialchars($selectedBuilding) ?>">
+            <div class="mb-2"><label class="form-label">Subject</label><input type="text" class="form-control" name="subject" required autofocus></div>
+            <div class="mb-2"><label class="form-label">Section</label><input type="text" class="form-control" name="section" placeholder="e.g. BSIT-2A"></div>
             <div class="mb-2">
               <label class="form-label">Day</label>
               <select class="form-select" name="day_of_week" required>
@@ -718,14 +864,8 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
               </select>
             </div>
             <div class="row g-2 mb-2">
-              <div class="col">
-                <label class="form-label">Start time</label>
-                <input type="time" class="form-control" name="time_start" required>
-              </div>
-              <div class="col">
-                <label class="form-label">End time</label>
-                <input type="time" class="form-control" name="time_end" required>
-              </div>
+              <div class="col"><label class="form-label">Start time</label><input type="time" class="form-control" name="time_start" required></div>
+              <div class="col"><label class="form-label">End time</label><input type="time" class="form-control" name="time_end" required></div>
             </div>
             <?php if ($role === 'admin' && !empty($instructors)): ?>
             <div class="mb-2">
@@ -749,37 +889,40 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
   <?php endif; ?>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <?php if ($canManageSchedules): ?>
+
+  <!-- ── Edit modal populate ── -->
+  <?php if ($canManageSchedules && $selectedBuilding): ?>
   <script>
-    const modalEl = document.getElementById('editScheduleModal');
+    const modalEl   = document.getElementById('editScheduleModal');
     const editModal = modalEl ? new bootstrap.Modal(modalEl) : null;
     if (editModal) {
-      document.querySelectorAll('.edit-btn').forEach((btn) => {
+      document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           document.getElementById('edit_schedule_id').value = btn.dataset.id;
-          document.getElementById('edit_subject').value = btn.dataset.subject;
-          document.getElementById('edit_section').value = btn.dataset.section;
-          document.getElementById('edit_day').value = btn.dataset.day;
-          document.getElementById('edit_start').value = btn.dataset.start;
-          document.getElementById('edit_end').value = btn.dataset.end;
+          document.getElementById('edit_subject').value     = btn.dataset.subject;
+          document.getElementById('edit_section').value     = btn.dataset.section;
+          document.getElementById('edit_day').value         = btn.dataset.day;
+          document.getElementById('edit_start').value       = btn.dataset.start;
+          document.getElementById('edit_end').value         = btn.dataset.end;
           const dispEl = document.getElementById('edit_instructor_display');
           if (dispEl) dispEl.textContent = btn.dataset.instructorName || '—';
           editModal.show();
         });
       });
     }
-
   </script>
   <?php endif; ?>
 
+  <!-- ── Map search ── -->
+  <?php if ($selectedBuilding): ?>
   <script>
-    // Map search — runs for all users
-    (function() {
+    (function () {
       const allSchedules = <?= $allSchedulesJson ?>;
       const mapSearch    = document.getElementById('mapSearch');
       const mapClear     = document.getElementById('mapSearchClear');
       const tiles        = document.querySelectorAll('#comlabMapGrid .comlab-tile');
       if (!mapSearch) return;
+
       function applyMapSearch() {
         const q = mapSearch.value.trim().toLowerCase();
         mapClear.style.display = q ? 'flex' : 'none';
@@ -792,9 +935,87 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
           t.classList.toggle('tile-dim',  !match);
         });
       }
+
       mapSearch.addEventListener('input', applyMapSearch);
       mapClear.addEventListener('click', () => { mapSearch.value = ''; applyMapSearch(); mapSearch.focus(); });
     })();
   </script>
+
+  <!-- ── Feature #4 — Real-time room availability auto-refresh (60s) ── -->
+  <script>
+    (function () {
+      const INTERVAL      = 60000; // 60 seconds
+      const STATUS_CLASSES = ['status-free', 'status-busy', 'status-out'];
+
+      // Apply fetched live data to map tiles AND left sidebar rows
+      function applyLiveData(data) {
+
+        // ── Update floor map tiles ──
+        document.querySelectorAll('#comlabMapGrid .comlab-tile').forEach(function (tile) {
+          const rid  = parseInt(tile.dataset.roomId, 10);
+          const info = data[rid];
+          if (!info) return;
+
+          // Swap status colour class
+          tile.classList.remove.apply(tile.classList, STATUS_CLASSES);
+
+          const label = tile.querySelector('.tile-live-label');
+
+          if (info.live_status === 'oos') {
+            tile.classList.add('status-out');
+            if (label) label.textContent = 'Out of service';
+          } else if (info.live_status === 'occupied') {
+            tile.classList.add('status-busy');
+            if (label) label.textContent = info.time_end ? 'Until ' + info.time_end : 'In Use';
+          } else {
+            tile.classList.add('status-free');
+            if (label) label.textContent = 'Free';
+          }
+        });
+
+        // ── Update left sidebar live availability rows ──
+        document.querySelectorAll('[data-sidebar-room-id]').forEach(function (row) {
+          const rid  = parseInt(row.dataset.sidebarRoomId, 10);
+          const info = data[rid];
+          if (!info) return;
+
+          const dot  = row.querySelector('.live-status-dot');
+          const lbl  = row.querySelector('.live-status-label');
+
+          if (dot)  dot.className  = 'live-status-dot';
+          if (lbl)  lbl.textContent = '';
+
+          if (info.live_status === 'oos') {
+            if (dot) dot.classList.add('live-out');
+            if (lbl) lbl.textContent = 'Out of service';
+          } else if (info.live_status === 'occupied') {
+            if (dot) dot.classList.add('live-busy');
+            if (lbl) lbl.textContent = 'Occupied';
+          } else {
+            if (dot) dot.classList.add('live-free');
+            if (lbl) lbl.textContent = 'Free';
+          }
+        });
+
+        // ── Update refresh timestamp ──
+        var ts = document.getElementById('liveRefreshTs');
+        if (ts) {
+          ts.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+      }
+
+      function fetchLiveStatus() {
+        fetch('room_status_live.php')
+          .then(function (r) { return r.json(); })
+          .then(function (data) { applyLiveData(data); })
+          .catch(function () { /* silent fail — stale colours remain */ });
+      }
+
+      fetchLiveStatus();                    // run immediately on page load
+      setInterval(fetchLiveStatus, INTERVAL); // then every 60 seconds
+    })();
+  </script>
+  <?php endif; ?>
+
 </body>
 </html>
