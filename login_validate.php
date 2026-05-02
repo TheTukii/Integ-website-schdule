@@ -18,6 +18,39 @@ if ($email === '' || $password === '') {
     exit;
 }
 
+if (RECAPTCHA_SECRET_KEY !== '') {
+    $recaptcha_response = trim((string) ($_POST['g-recaptcha-response'] ?? ''));
+    if ($recaptcha_response === '') {
+        $_SESSION['login_error'] = 'Please complete the CAPTCHA.';
+        header("Location: login-page.php");
+        exit;
+    }
+    $payload = http_build_query([
+        'secret'   => RECAPTCHA_SECRET_KEY,
+        'response' => $recaptcha_response,
+        'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
+    ]);
+    $ctx = stream_context_create([
+        'http' => [
+            'method'  => 'POST',
+            'header'  => "Content-Type: application/x-www-form-urlencoded\r\n",
+            'content' => $payload,
+            'timeout' => 10,
+        ],
+    ]);
+    $raw = @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $ctx);
+    $verified = false;
+    if ($raw !== false) {
+        $json = json_decode($raw, true);
+        $verified = is_array($json) && !empty($json['success']);
+    }
+    if (!$verified) {
+        $_SESSION['login_error'] = 'CAPTCHA verification failed. Please try again.';
+        header("Location: login-page.php");
+        exit;
+    }
+}
+
 // Look up user by email
 $stmt = $conn->prepare("SELECT id, name, password, role, is_active FROM users WHERE email = ? LIMIT 1");
 $stmt->bind_param("s", $email);

@@ -1,0 +1,6 @@
+# Local DB + OAuth + reCAPTCHA secrets — copy config.example.php to config.php and fill in.
+config.php
+
+# Composer tooling (install deps with: php composer.phar install or composer install)
+composer.phar
+composer-setup.php
