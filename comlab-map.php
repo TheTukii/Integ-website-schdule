@@ -627,7 +627,7 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
         <?php if ($isLoggedIn): ?>
           <a href="my-schedules.php" class="nav-item" style="text-decoration:none;">
             <i class="bi bi-calendar3 nav-icon"></i>
-            My Schedules
+            <?= $role === 'student' ? 'Schedules' : 'My Schedules' ?>
           </a>
         <?php endif; ?>
         <?php if ($role === 'admin'): ?>

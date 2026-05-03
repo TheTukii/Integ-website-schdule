@@ -29,20 +29,34 @@ if ($viewId !== $userId) {
     $viewName = $nameRow['name'] ?? "User #$viewId";
 }
 
-// Fetch all schedules for this instructor
+// Fetch schedules
 $schedules = [];
-$schedStmt = $conn->prepare(
-    "SELECT s.id, s.subject, s.section, s.day_of_week, s.time_start, s.time_end, s.status,
-            r.room_name, r.id AS room_id
-     FROM schedules s
-     INNER JOIN rooms r ON r.id = s.room_id
-     WHERE s.instructor_id = ?
-     ORDER BY FIELD(s.day_of_week, 'Monday and Thursday','Tuesday and Wednesday'), s.time_start ASC"
-);
-$schedStmt->bind_param('i', $viewId);
-$schedStmt->execute();
-$schedules = $schedStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$schedStmt->close();
+if ($role === 'student') {
+    $schedStmt = $conn->prepare(
+        "SELECT s.id, s.subject, s.section, s.day_of_week, s.time_start, s.time_end, s.status,
+                r.room_name, r.id AS room_id, u.name AS instructor_name
+         FROM schedules s
+         INNER JOIN rooms r ON r.id = s.room_id
+         LEFT JOIN users u ON u.id = s.instructor_id
+         ORDER BY FIELD(s.day_of_week, 'Monday and Thursday','Tuesday and Wednesday'), s.time_start ASC"
+    );
+    $schedStmt->execute();
+    $schedules = $schedStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $schedStmt->close();
+} else {
+    $schedStmt = $conn->prepare(
+        "SELECT s.id, s.subject, s.section, s.day_of_week, s.time_start, s.time_end, s.status,
+                r.room_name, r.id AS room_id
+         FROM schedules s
+         INNER JOIN rooms r ON r.id = s.room_id
+         WHERE s.instructor_id = ?
+         ORDER BY FIELD(s.day_of_week, 'Monday and Thursday','Tuesday and Wednesday'), s.time_start ASC"
+    );
+    $schedStmt->bind_param('i', $viewId);
+    $schedStmt->execute();
+    $schedules = $schedStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $schedStmt->close();
+}
 
 // Group by day
 $byDay = [];
@@ -75,7 +89,7 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BukSU — My Schedules</title>
+  <title>BukSU — <?= $role === 'student' ? 'Schedules' : 'My Schedules' ?></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
@@ -297,7 +311,7 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
         <?php if ($isLoggedIn): ?>
           <a href="my-schedules.php" class="nav-item active" style="text-decoration:none;">
             <i class="bi bi-calendar3 nav-icon"></i>
-            My Schedules
+            <?= $role === 'student' ? 'Schedules' : 'My Schedules' ?>
           </a>
         <?php endif; ?>
         <?php if ($role === 'admin'): ?>
@@ -357,8 +371,12 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
 
       <div class="page-header">
         <div>
-          <h1><i class="bi bi-calendar3 me-2"></i>My Schedules</h1>
-          <p>All schedules assigned to <strong><?= htmlspecialchars($viewName) ?></strong></p>
+          <h1><i class="bi bi-calendar3 me-2"></i><?= $role === 'student' ? 'Schedules' : 'My Schedules' ?></h1>
+          <?php if ($role === 'student'): ?>
+            <p>All active schedules across all computer laboratories</p>
+          <?php else: ?>
+            <p>All schedules assigned to <strong><?= htmlspecialchars($viewName) ?></strong></p>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -386,8 +404,9 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
             <div class="day-group" data-day="<?= htmlspecialchars($day) ?>">
               <p class="day-group-label"><?= htmlspecialchars($day) ?></p>
               <?php foreach ($rows as $s): ?>
+                <?php $searchStr = strtolower($s['subject'] . ' ' . $s['section'] . ' ' . $s['room_name'] . ($role === 'student' ? ' ' . ($s['instructor_name'] ?? '') : '')); ?>
                 <div class="sched-card mb-2"
-                     data-search="<?= strtolower(htmlspecialchars($s['subject'] . ' ' . $s['section'] . ' ' . $s['room_name'])) ?>"
+                     data-search="<?= htmlspecialchars($searchStr) ?>"
                      data-day="<?= htmlspecialchars($s['day_of_week']) ?>">
                   <div class="sched-time-block">
                     <div class="t-start"><?= date('g:i A', strtotime($s['time_start'])) ?></div>
@@ -396,6 +415,9 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
                   <div class="sched-info">
                     <div class="subj"><?= htmlspecialchars($s['subject']) ?></div>
                     <div class="sec"><?= $s['section'] ? htmlspecialchars($s['section']) : '<span style="opacity:.5">No section</span>' ?></div>
+                    <?php if ($role === 'student' && !empty($s['instructor_name'])): ?>
+                      <div style="font-size: 11px; color: var(--muted); margin-top: 2px;"><i class="bi bi-person"></i> <?= htmlspecialchars($s['instructor_name']) ?></div>
+                    <?php endif; ?>
                   </div>
                   <a class="sched-room-tag" href="comlab-map.php?room_id=<?= (int)$s['room_id'] ?>">
                     <i class="bi bi-geo-alt"></i> <?= htmlspecialchars($s['room_name']) ?>
