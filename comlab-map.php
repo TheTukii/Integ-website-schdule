@@ -635,6 +635,10 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
             <i class="bi bi-people nav-icon"></i>
             Manage Users
           </a>
+          <a href="admin-reports.php" class="nav-item" style="text-decoration:none;">
+            <i class="bi bi-exclamation-triangle nav-icon"></i>
+            Room Reports
+          </a>
         <?php endif; ?>
       </div>
 
@@ -917,6 +921,16 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
         </div>
         <?php endif; ?>
 
+        <?php if (in_array($role, ['instructor', 'admin'], true) && $selectedRoomId > 0): ?>
+        <hr class="divider" role="presentation">
+        <div>
+          <p class="panel-title">Report an issue</p>
+          <button type="button" class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#reportIssueModal">
+            <i class="bi bi-exclamation-triangle"></i> Report Room Issue
+          </button>
+        </div>
+        <?php endif; ?>
+
       </div>
     </aside>
     <?php endif; ?>
@@ -1007,6 +1021,49 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save Schedule</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <!-- ── Report Issue Modal ── -->
+  <?php if (in_array($role, ['instructor', 'admin'], true) && $selectedRoomId > 0 && $selectedBuilding): ?>
+  <div class="modal fade" id="reportIssueModal" tabindex="-1" aria-labelledby="reportIssueModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST" action="room_report_save.php">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="reportIssueModalLabel">
+              <i class="bi bi-exclamation-triangle me-1"></i> Report Issue — <?= htmlspecialchars($selectedRoom['display_label'] ?? '') ?>
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="action" value="create">
+            <input type="hidden" name="room_id" value="<?= (int)$selectedRoomId ?>">
+            <input type="hidden" name="building" value="<?= htmlspecialchars($selectedBuilding) ?>">
+            
+            <div class="mb-3">
+              <label class="form-label">Issue Type</label>
+              <select class="form-select" name="issue_type" required>
+                <option value="damaged_equipment">Damaged Equipment</option>
+                <option value="no_internet">No Internet Connection</option>
+                <option value="no_electricity">No Electricity</option>
+                <option value="out_of_service">Room Out of Service</option>
+                <option value="other" selected>Other</option>
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" name="description" rows="4" placeholder="Please provide details about the issue..." required></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-danger"><i class="bi bi-send me-1"></i>Submit Report</button>
           </div>
         </form>
       </div>

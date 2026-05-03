@@ -305,6 +305,10 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
             <i class="bi bi-people nav-icon"></i>
             Manage Users
           </a>
+          <a href="admin-reports.php" class="nav-item" style="text-decoration:none;">
+            <i class="bi bi-exclamation-triangle nav-icon"></i>
+            Room Reports
+          </a>
         <?php endif; ?>
       </div>
 
