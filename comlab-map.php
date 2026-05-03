@@ -291,28 +291,114 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     .map-search-clear:hover { color: var(--text,#0D1B2A); }
 
     /* ═══════════════════════════════════════════
-       LEVEL 1 — Campus view
+       LEVEL 1 — Campus view (full-bleed map + overlay cards)
     ═══════════════════════════════════════════ */
     .campus-view {
       flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 2rem; gap: 1.5rem; overflow-y: auto;
+      align-items: stretch; justify-content: stretch;
+      padding: 0; gap: 0; overflow: hidden;
+      position: relative;
     }
-    .campus-heading { text-align: center; }
-    .campus-heading h2 { font-size: 1.1rem; font-weight: 700; color: var(--navy,#042C53); margin: 0 0 4px; }
-    .campus-heading p  { font-size: 12px; color: var(--muted,#5A7A96); margin: 0; }
+
+    /* Full-bleed map background */
+    .campus-map-section {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: #042C53;
+      overflow: hidden;
+    }
+    .campus-map-section svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      preserveAspectRatio: xMidYMid slice;
+    }
+
+    /* Dark gradient overlay so cards are readable */
+    .campus-map-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(
+        to bottom,
+        rgba(4,44,83,0.18) 0%,
+        rgba(4,44,83,0.52) 60%,
+        rgba(4,44,83,0.72) 100%
+      );
+      pointer-events: none;
+    }
+
+    /* Content layer on top of map */
+    .campus-overlay-content {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 1rem 1.25rem 1.5rem;
+      gap: 0.85rem;
+    }
+
+    .campus-heading { text-align: center; flex-shrink: 0; }
+    .campus-heading h2 { font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 4px; text-shadow: 0 1px 6px rgba(0,0,0,.35); }
+    .campus-heading p  { font-size: 12px; color: rgba(255,255,255,0.78); margin: 0; }
+
     .campus-buildings-grid {
-      display: flex; gap: 1.5rem; flex-wrap: wrap;
-      justify-content: center; width: 100%; max-width: 680px;
+      display: flex; gap: 1.25rem; flex-wrap: wrap;
+      justify-content: center; width: 100%; max-width: 100%;
+      flex-shrink: 0;
+    }
+
+    /* ── Second mini map card (inside overlay) ── */
+    .campus-minimap-card {
+      width: 100%;
+      max-width: 100%;
+      flex: 1;
+      min-height: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1.5px solid rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 8px 32px rgba(4,44,83,0.28);
+      display: flex;
+      flex-direction: column;
+    }
+    .campus-minimap-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      background: rgba(4,44,83,0.25);
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      flex-shrink: 0;
+    }
+    .campus-minimap-body {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
     }
     .building-card {
       flex: 1; min-width: 240px; max-width: 300px;
-      background: var(--white,#fff); border: 1.5px solid var(--border,#C8DFF0);
+      background: rgba(255,255,255,0.93);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(255,255,255,0.7);
       border-radius: 14px; padding: 1.5rem 1.25rem;
       text-decoration: none; color: inherit;
       display: flex; flex-direction: column; gap: 12px;
-      transition: transform .18s, box-shadow .18s, border-color .18s;
+      transition: transform .18s, box-shadow .18s, border-color .18s, background .18s;
       cursor: pointer; position: relative; overflow: hidden;
+      box-shadow: 0 8px 32px rgba(4,44,83,0.22);
     }
     .building-card::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0;
@@ -320,10 +406,20 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     }
     .building-card.hs-card::before  { background: #1a6b9a; }
     .building-card.fin-card::before { background: #1a7a5e; }
+    .building-card.hs-card {
+      background: linear-gradient(135deg, #daeef9 0%, #c5e3f4 100%);
+      border-color: rgba(26,107,154,0.35);
+    }
+    .building-card.fin-card {
+      background: linear-gradient(135deg, #d4f0e8 0%, #bce5d8 100%);
+      border-color: rgba(26,122,94,0.35);
+    }
     .building-card:hover {
       transform: translateY(-3px); box-shadow: 0 8px 28px rgba(4,44,83,.13);
       border-color: var(--accent,#378ADD); text-decoration: none; color: inherit;
     }
+    .building-card.hs-card:hover  { border-color: #1a6b9a; }
+    .building-card.fin-card:hover { border-color: #1a7a5e; }
     .building-card-icon {
       width: 44px; height: 44px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center; font-size: 22px;
@@ -393,7 +489,6 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     .comlab-tile:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(4,44,83,.18); }
     .comlab-tile.active { outline: 3px solid #185fa5; outline-offset: 1px; }
 
-    /* Status colours — set by PHP on load, overridden by JS live polling */
     .status-free { background: #e7f8f1; }
     .status-busy { background: #fce9e9; }
     .status-out  { background: #eee; color: #737373; }
@@ -401,14 +496,11 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     .tile-dim   { opacity: .28; filter: grayscale(60%); }
     .tile-match { opacity: 1; filter: none; box-shadow: 0 0 0 3px #378ADD, 0 4px 16px rgba(55,138,221,.35); z-index: 10; }
 
-    /* Schedule badge on tile */
     .tile-sched-badge {
       font-size: 10px; font-weight: 700;
       background: rgba(4,44,83,.12); border-radius: 10px;
       padding: 1px 6px; line-height: 1.4;
     }
-
-    /* ── Live label on tile (feature #4) ── */
     .tile-live-label {
       font-size: 9px; font-weight: 700; opacity: .75;
       line-height: 1.2; text-align: center;
@@ -432,7 +524,6 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     .legend-occupied  { background: #fce9e9; }
     .legend-out       { background: #eee; }
 
-    /* Live refresh indicator */
     .live-refresh-bar {
       display: flex; align-items: center; gap: 6px;
       font-size: 11px; color: var(--muted,#5A7A96); flex-shrink: 0;
@@ -466,9 +557,17 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
 
     /* Campus-mode hides right sidebar */
     .campus-mode .sidebar-right { display: none !important; }
+
+    /* ── Per-building floor-view backgrounds ── */
+    body.building-highschool .floor-view {
+      background: linear-gradient(135deg, #daeef9 0%, #c5e3f4 100%);
+    }
+    body.building-finance .floor-view {
+      background: linear-gradient(135deg, #d4f0e8 0%, #bce5d8 100%);
+    }
   </style>
 </head>
-<body class="page-comlab-map <?= $selectedBuilding ? '' : 'campus-mode' ?>">
+<body class="page-comlab-map <?= $selectedBuilding ? 'building-' . htmlspecialchars($selectedBuilding) : 'campus-mode' ?>">
 
   <!-- ── Topbar ── -->
   <header class="topbar">
@@ -582,10 +681,36 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     ══════════════════════════════════════ -->
     <?php if (!$selectedBuilding): ?>
     <main class="main-content campus-view">
-      <div class="campus-heading">
-        <h2><i class="bi bi-geo-alt me-2"></i>Select a Building</h2>
-        <p>Click a building to view its computer laboratories</p>
-      </div>
+
+      <!-- ── Full-bleed Campus Map Background ── -->
+      <div class="campus-map-section"></div>
+      <!-- ── End Campus Map Background ── -->
+
+      <!-- Dark gradient overlay -->
+      <div class="campus-map-overlay"></div>
+
+      <!-- Overlay content: heading + cards -->
+      <div class="campus-overlay-content">
+
+        <!-- ── Second campus map card (floating above cards) ── -->
+        <div class="campus-minimap-card">
+          <div class="campus-minimap-header">
+            <i class="bi bi-map" style="font-size:12px;"></i>
+            Campus Overview
+          </div>
+          <div class="campus-minimap-body">
+            <img src="includes/img/map.png"
+                 alt="BukSU Campus Map"
+                 style="width:100%;height:100%;object-fit:contain;display:block;border-radius:0 0 6px 6px;"
+                 loading="lazy">
+          </div>
+        </div>
+        <!-- ── End second campus map ── -->
+
+        <div class="campus-heading">
+          <h2><i class="bi bi-geo-alt me-2"></i>Select a Building</h2>
+          <p>Click a building to view its computer laboratories</p>
+        </div>
 
       <div class="campus-buildings-grid">
         <?php foreach ($buildings as $bKey => $bDef):
@@ -616,7 +741,9 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
           <i class="bi bi-chevron-right building-card-arrow"></i>
         </a>
         <?php endforeach; ?>
-      </div>
+        </div><!-- /.campus-buildings-grid -->
+
+      </div><!-- /.campus-overlay-content -->
     </main>
 
     <?php else: ?>
@@ -658,7 +785,6 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
               <?php if ($schedCnt > 0): ?>
                 <span class="tile-sched-badge"><?= $schedCnt ?> sched<?= $schedCnt > 1 ? 's' : '' ?></span>
               <?php endif; ?>
-              <!-- Live status label — populated & updated by JS polling (feature #4) -->
               <span class="tile-live-label"></span>
             </a>
           <?php endforeach; ?>
@@ -941,26 +1067,19 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     })();
   </script>
 
-  <!-- ── Feature #4 — Real-time room availability auto-refresh (60s) ── -->
+  <!-- Real-time room availability auto-refresh (60s) -->
   <script>
     (function () {
-      const INTERVAL      = 60000; // 60 seconds
+      const INTERVAL       = 60000;
       const STATUS_CLASSES = ['status-free', 'status-busy', 'status-out'];
 
-      // Apply fetched live data to map tiles AND left sidebar rows
       function applyLiveData(data) {
-
-        // ── Update floor map tiles ──
         document.querySelectorAll('#comlabMapGrid .comlab-tile').forEach(function (tile) {
           const rid  = parseInt(tile.dataset.roomId, 10);
           const info = data[rid];
           if (!info) return;
-
-          // Swap status colour class
           tile.classList.remove.apply(tile.classList, STATUS_CLASSES);
-
           const label = tile.querySelector('.tile-live-label');
-
           if (info.live_status === 'oos') {
             tile.classList.add('status-out');
             if (label) label.textContent = 'Out of service';
@@ -973,18 +1092,14 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
           }
         });
 
-        // ── Update left sidebar live availability rows ──
         document.querySelectorAll('[data-sidebar-room-id]').forEach(function (row) {
           const rid  = parseInt(row.dataset.sidebarRoomId, 10);
           const info = data[rid];
           if (!info) return;
-
           const dot  = row.querySelector('.live-status-dot');
           const lbl  = row.querySelector('.live-status-label');
-
-          if (dot)  dot.className  = 'live-status-dot';
-          if (lbl)  lbl.textContent = '';
-
+          if (dot) dot.className = 'live-status-dot';
+          if (lbl) lbl.textContent = '';
           if (info.live_status === 'oos') {
             if (dot) dot.classList.add('live-out');
             if (lbl) lbl.textContent = 'Out of service';
@@ -997,7 +1112,6 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
           }
         });
 
-        // ── Update refresh timestamp ──
         var ts = document.getElementById('liveRefreshTs');
         if (ts) {
           ts.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1008,11 +1122,11 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
         fetch('room_status_live.php')
           .then(function (r) { return r.json(); })
           .then(function (data) { applyLiveData(data); })
-          .catch(function () { /* silent fail — stale colours remain */ });
+          .catch(function () {});
       }
 
-      fetchLiveStatus();                    // run immediately on page load
-      setInterval(fetchLiveStatus, INTERVAL); // then every 60 seconds
+      fetchLiveStatus();
+      setInterval(fetchLiveStatus, INTERVAL);
     })();
   </script>
   <?php endif; ?>

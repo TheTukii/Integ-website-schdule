@@ -25,6 +25,23 @@ if ($result instanceof mysqli_result) {
     }
 }
 
+// Live availability for sidebar
+$today = date('l');
+$canManageSchedules = in_array($role, ['admin', 'instructor'], true);
+$todayRooms = [];
+$todaySql = "SELECT r.id, r.room_name, r.status,
+             EXISTS(SELECT 1 FROM schedules s WHERE s.room_id = r.id
+               AND s.day_of_week = ? AND CURTIME() BETWEEN s.time_start AND s.time_end
+               AND s.status <> 'cancelled') AS is_busy
+             FROM rooms r WHERE r.room_name LIKE 'Comlab %' ORDER BY r.room_name ASC";
+$todayStmt = $conn->prepare($todaySql);
+if ($todayStmt) {
+    $todayStmt->bind_param('s', $today);
+    $todayStmt->execute();
+    $todayRooms = $todayStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $todayStmt->close();
+}
+
 $dashboardCssPath  = __DIR__ . '/includes/css/user-dashboard-css.css';
 $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardCssPath) : '';
 ?>
@@ -41,64 +58,36 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
     <style><?= $dashboardCssInline ?></style>
   <?php endif; ?>
   <style>
-    body {
-      overflow: hidden;
-    }
+    body { overflow: hidden; background: #042C53; }
 
-    /* ── Layout ── */
-    .body-layout {
-      display: flex;
-      flex-direction: row;
-      height: calc(100vh - var(--topbar-h));
-      overflow: hidden;
+    /* ── Live availability panel (sidebar) ── */
+    .sidebar-live-region {
+      border: 1px solid var(--border,#C8DFF0);
+      border-radius: 10px;
+      background: var(--navy-pale,#F4F8FD);
+      padding: .75rem .65rem;
     }
-
-    /* ── Sidebar ── */
-    .sidebar-left {
-      width: 220px;
-      flex-shrink: 0;
-      height: 100%;
-      overflow-y: auto;
-      background: var(--white);
-      border-right: 1px solid var(--border);
-      padding: 1.25rem 0.75rem;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .panel-title-live {
+      font-size: 11px; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--muted,#5A7A96); margin-bottom: .5rem;
     }
-    .nav-section-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      padding: 0 8px;
-      margin: 0 0 6px;
+    .sidebar-live-caption { font-size: 11px; color: var(--muted,#5A7A96); margin-bottom: .5rem; }
+    .sidebar-live-scroll {
+      max-height: min(32vh,260px); overflow-y: auto; overscroll-behavior: contain;
+      display: flex; flex-direction: column; gap: 4px; padding-right: 2px;
     }
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text);
-      transition: background 0.15s, color 0.15s;
+    .live-availability-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 8px; font-size: 12px; border-radius: 8px;
+      background: var(--white,#fff); border: 1px solid var(--border,#C8DFF0);
     }
-    .nav-item:hover {
-      background: var(--navy-pale);
-      color: var(--navy);
-    }
-    .nav-item.active {
-      background: var(--navy-light);
-      color: var(--navy);
-      font-weight: 600;
-    }
-    .nav-icon {
-      font-size: 15px;
-      flex-shrink: 0;
-    }
+    .live-room-name { color: var(--text,#0D1B2A); font-weight: 500; }
+    .live-status-pair { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .live-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .live-status-dot.live-free { background: #1D9E75; }
+    .live-status-dot.live-busy { background: #E24B4A; }
+    .live-status-dot.live-out  { background: #94a3b8; }
+    .live-status-label { font-size: 11px; font-weight: 600; color: var(--muted,#5A7A96); text-align: right; }
 
     /* ── Main content ── */
     .manage-main {
@@ -339,6 +328,43 @@ $dashboardCssInline = is_file($dashboardCssPath) ? file_get_contents($dashboardC
             Manage Users
           </a>
         <?php endif; ?>
+      </div>
+
+      <nav class="sidebar-live-region mt-2" aria-labelledby="live-heading-mu">
+        <h2 id="live-heading-mu" class="panel-title-live">Live availability</h2>
+        <p class="sidebar-live-caption">Today (<?= htmlspecialchars($today) ?>)</p>
+        <div class="sidebar-live-scroll" tabindex="0">
+          <?php if (empty($todayRooms)): ?>
+            <small class="text-muted px-1">No room data loaded.</small>
+          <?php else: ?>
+            <?php foreach ($todayRooms as $liveRoom): ?>
+              <?php
+                $lsc = 'live-free'; $lsl = 'Free';
+                if (($liveRoom['status'] ?? '') === 'out_of_service')                                          { $lsc = 'live-out';  $lsl = 'Out of service'; }
+                elseif ((int)$liveRoom['is_busy'] === 1 || ($liveRoom['status'] ?? '') === 'occupied') { $lsc = 'live-busy'; $lsl = 'Occupied'; }
+              ?>
+              <div class="live-availability-row">
+                <span class="live-room-name"><?= htmlspecialchars($liveRoom['room_name']) ?></span>
+                <div class="live-status-pair">
+                  <span class="live-status-dot <?= $lsc ?>"></span>
+                  <span class="live-status-label"><?= htmlspecialchars($lsl) ?></span>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </div>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+      <div class="profile-card">
+        <div class="profile-card-top">
+          <div class="avatar"><?= strtoupper(substr($adminName, 0, 1)) ?></div>
+          <div>
+            <div class="name"><?= htmlspecialchars($adminName) ?></div>
+            <div class="id">Logged In User</div>
+          </div>
+        </div>
+        <span class="badge"><?= $canManageSchedules ? 'Can Add/Edit Schedule' : 'Can View Schedule Only' ?></span>
       </div>
     </aside>
 
