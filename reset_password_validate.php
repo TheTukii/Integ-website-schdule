@@ -42,6 +42,16 @@ $stmt = $conn->prepare("UPDATE users SET password = ? WHERE email = ?");
 $stmt->bind_param("ss", $hashed_password, $email);
 
 if ($stmt->execute()) {
+    $stmt->close();
+
+    // Mark token as used in the database
+    if (isset($_SESSION['reset_email']) && isset($_SESSION['reset_code'])) {
+        $updateStmt = $conn->prepare("UPDATE password_resets SET used = 1 WHERE email = ? AND token = ?");
+        $updateStmt->bind_param("ss", $_SESSION['reset_email'], $_SESSION['reset_code']);
+        $updateStmt->execute();
+        $updateStmt->close();
+    }
+
     // Clear reset sessions
     unset($_SESSION['reset_email']);
     unset($_SESSION['reset_code']);
@@ -50,7 +60,6 @@ if ($stmt->execute()) {
     // Set success message for login page
     $_SESSION['register_success'] = "Password reset successfully! You can now log in with your new password.";
     
-    $stmt->close();
     header("Location: login-page.php");
     exit;
 } else {

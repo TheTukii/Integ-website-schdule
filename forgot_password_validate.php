@@ -46,6 +46,12 @@ $stmt->close();
 // Generate a 6-digit verification code
 $reset_code = sprintf("%06d", mt_rand(1, 999999));
 
+// Store in database
+$stmt = $conn->prepare("INSERT INTO password_resets (email, token) VALUES (?, ?)");
+$stmt->bind_param("ss", $email, $reset_code);
+$stmt->execute();
+$stmt->close();
+
 // Store in session for verification
 $_SESSION['reset_code'] = $reset_code;
 $_SESSION['reset_email'] = $email;
