@@ -81,28 +81,36 @@ if ($roomResult instanceof mysqli_result) {
 
 // Auto-seed rooms if DB is empty
 if (count($rooms) === 0) {
-    $buildingId = 0;
-    $buildingResult = $conn->query("SELECT id FROM buildings ORDER BY id ASC LIMIT 1");
-    if ($buildingResult instanceof mysqli_result && $buildingRow = $buildingResult->fetch_assoc()) {
-        $buildingId = (int) $buildingRow['id'];
-    } else {
-        $insertBuilding = $conn->prepare("INSERT INTO buildings (code, name, description) VALUES ('COMLAB', 'Computer Laboratory Building', 'Auto-generated')");
-        if ($insertBuilding && $insertBuilding->execute()) {
-            $buildingId = (int) $conn->insert_id;
+    $financeId = 0;
+    $hsId = 0;
+    
+    $res = $conn->query("SELECT id, code FROM buildings WHERE code IN ('FINANCE', 'HS')");
+    if ($res instanceof mysqli_result) {
+        while ($row = $res->fetch_assoc()) {
+            if ($row['code'] === 'FINANCE') $financeId = (int)$row['id'];
+            if ($row['code'] === 'HS') $hsId = (int)$row['id'];
         }
-        if ($insertBuilding) $insertBuilding->close();
     }
-    if ($buildingId > 0) {
-        $insertRoom = $conn->prepare("INSERT INTO rooms (building_id, room_code, room_name, capacity, status, description) VALUES (?, ?, ?, 40, 'available', 'Auto-generated comlab')");
-        if ($insertRoom) {
-            for ($i = 1; $i <= 12; $i++) {
-                $roomCode = 'COMLAB' . $i;
-                $roomName = 'Comlab ' . $i;
-                $insertRoom->bind_param('iss', $buildingId, $roomCode, $roomName);
-                $insertRoom->execute();
-            }
-            $insertRoom->close();
+    
+    if ($financeId === 0) {
+        $conn->query("INSERT INTO buildings (code, name, description) VALUES ('FINANCE', 'Finance Building', 'Main academic classrooms')");
+        $financeId = (int)$conn->insert_id;
+    }
+    if ($hsId === 0) {
+        $conn->query("INSERT INTO buildings (code, name, description) VALUES ('HS', 'High School Building', 'Contains three additional rooms')");
+        $hsId = (int)$conn->insert_id;
+    }
+    
+    $insertRoom = $conn->prepare("INSERT INTO rooms (building_id, room_code, room_name, capacity, status, description) VALUES (?, ?, ?, 40, 'available', 'Auto-generated comlab')");
+    if ($insertRoom) {
+        for ($i = 1; $i <= 12; $i++) {
+            $bId = in_array($i, [8, 9, 10]) ? $hsId : $financeId;
+            $roomCode = 'COMLAB' . $i;
+            $roomName = 'Comlab ' . $i;
+            $insertRoom->bind_param('iss', $bId, $roomCode, $roomName);
+            $insertRoom->execute();
         }
+        $insertRoom->close();
     }
     $roomResult = $conn->query($sqlRooms);
     if ($roomResult instanceof mysqli_result) {
