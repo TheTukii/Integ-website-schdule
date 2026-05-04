@@ -313,7 +313,7 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
       position: absolute;
       inset: 0;
       z-index: 0;
-      background: #042C53;
+      background: var(--navy-pale, #F8FAFB);
       overflow: hidden;
     }
     .campus-map-section svg {
@@ -323,18 +323,9 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
       preserveAspectRatio: xMidYMid slice;
     }
 
-    /* Dark gradient overlay so cards are readable */
+    /* Overlay removed — light background no longer needs dark gradient */
     .campus-map-overlay {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      background: linear-gradient(
-        to bottom,
-        rgba(4,44,83,0.18) 0%,
-        rgba(4,44,83,0.52) 60%,
-        rgba(4,44,83,0.72) 100%
-      );
-      pointer-events: none;
+      display: none;
     }
 
     /* Content layer on top of map */
@@ -342,22 +333,39 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
       position: absolute;
       inset: 0;
       z-index: 2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 1rem 1.25rem 1.5rem;
-      gap: 0.85rem;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      grid-template-rows: 1fr;
+      align-items: stretch;
+      padding: 1.25rem 1.5rem;
+      gap: 0;
     }
 
-    .campus-heading { text-align: center; flex-shrink: 0; }
-    .campus-heading h2 { font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 4px; text-shadow: 0 1px 6px rgba(0,0,0,.35); }
-    .campus-heading p  { font-size: 12px; color: rgba(255,255,255,0.78); margin: 0; }
+    /* Left panel — map context */
+    .campus-map-panel {
+      display: flex;
+      flex-direction: column;
+      padding: 1.25rem 1rem 1.25rem 0;
+      min-height: 0;
+    }
+
+    /* Right panel — building selector */
+    .campus-selector-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1.25rem 0 1.25rem 1.5rem;
+      border-left: 1px solid var(--border, #D7E1E8);
+    }
+
+    .campus-heading { flex-shrink: 0; }
+    .campus-heading h2 { font-size: 1.25rem; font-weight: 700; color: var(--navy, #042C53); margin: 0 0 4px; }
+    .campus-heading p  { font-size: 12.5px; color: var(--muted, #5F7387); margin: 0; }
 
     .campus-buildings-grid {
-      display: flex; gap: 1.25rem; flex-wrap: wrap;
-      justify-content: center; width: 100%; max-width: 100%;
-      flex-shrink: 0;
+      display: flex; flex-direction: column; gap: 0.75rem;
+      width: 100%;
     }
 
     /* ── Second mini map card (inside overlay) ── */
@@ -368,11 +376,9 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
       min-height: 0;
       border-radius: 14px;
       overflow: hidden;
-      border: 1.5px solid rgba(255,255,255,0.45);
-      background: rgba(255,255,255,0.10);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      box-shadow: 0 8px 32px rgba(4,44,83,0.28);
+      border: 1px solid var(--border, #D7E1E8);
+      background: var(--white, #ffffff);
+      box-shadow: 0 4px 16px rgba(4,44,83,0.10);
       display: flex;
       flex-direction: column;
     }
@@ -385,9 +391,9 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
       font-weight: 700;
       letter-spacing: .06em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.85);
-      background: rgba(4,44,83,0.25);
-      border-bottom: 1px solid rgba(255,255,255,0.15);
+      color: var(--muted, #5F7387);
+      background: var(--navy-pale, #F8FAFB);
+      border-bottom: 1px solid var(--border, #D7E1E8);
       flex-shrink: 0;
     }
     .campus-minimap-body {
@@ -395,60 +401,49 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
       min-height: 0;
       overflow: hidden;
     }
+    /* ── Building cards — clean white with colored left accent ── */
     .building-card {
-      flex: 1; min-width: 240px; max-width: 300px;
-      background: rgba(255,255,255,0.93);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1.5px solid rgba(255,255,255,0.7);
-      border-radius: 14px; padding: 1.5rem 1.25rem;
+      width: 100%;
+      background: var(--white, #ffffff);
+      border: 1px solid var(--border, #D7E1E8);
+      border-left: 4px solid transparent;
+      border-radius: 12px; padding: 1rem 1.1rem;
       text-decoration: none; color: inherit;
-      display: flex; flex-direction: column; gap: 12px;
-      transition: transform .18s, box-shadow .18s, border-color .18s, background .18s;
+      display: flex; align-items: center; gap: 14px;
+      transition: transform .15s, box-shadow .15s, border-color .15s;
       cursor: pointer; position: relative; overflow: hidden;
-      box-shadow: 0 8px 32px rgba(4,44,83,0.22);
+      box-shadow: 0 1px 4px rgba(4,44,83,0.07);
     }
-    .building-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0;
-      height: 4px; border-radius: 14px 14px 0 0;
-    }
-    .building-card.hs-card::before  { background: #1a6b9a; }
-    .building-card.fin-card::before { background: #1a7a5e; }
-    .building-card.hs-card {
-      background: linear-gradient(135deg, #daeef9 0%, #c5e3f4 100%);
-      border-color: rgba(26,107,154,0.35);
-    }
-    .building-card.fin-card {
-      background: linear-gradient(135deg, #d4f0e8 0%, #bce5d8 100%);
-      border-color: rgba(26,122,94,0.35);
-    }
+    .building-card.hs-card  { border-left-color: #042C53; }
+    .building-card.fin-card { border-left-color: #1a7a5e; }
     .building-card:hover {
-      transform: translateY(-3px); box-shadow: 0 8px 28px rgba(4,44,83,.13);
-      border-color: var(--accent,#378ADD); text-decoration: none; color: inherit;
+      transform: translateX(3px);
+      box-shadow: 0 4px 16px rgba(4,44,83,0.12);
+      text-decoration: none; color: inherit;
     }
-    .building-card.hs-card:hover  { border-color: #1a6b9a; }
-    .building-card.fin-card:hover { border-color: #1a7a5e; }
+    .building-card.hs-card:hover  { border-left-color: #042C53; border-color: rgba(4,44,83,0.3); }
+    .building-card.fin-card:hover { border-left-color: #1a7a5e; border-color: rgba(26,122,94,0.3); }
     .building-card-icon {
-      width: 44px; height: 44px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center; font-size: 22px;
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
     }
-    .hs-card  .building-card-icon { background: #e8f4fb; color: #1a6b9a; }
-    .fin-card .building-card-icon { background: #e8f8f4; color: #1a7a5e; }
-    .building-card-body { flex: 1; }
-    .building-card-name { font-size: 15px; font-weight: 700; color: var(--navy,#042C53); margin: 0 0 3px; }
-    .building-card-desc { font-size: 12px; color: var(--muted,#5A7A96); margin: 0; }
-    .building-card-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hs-card  .building-card-icon { background: #e8f4fb; color: #042C53; }
+    .fin-card .building-card-icon { background: #eaf6f1; color: #1a7a5e; }
+    .building-card-body { flex: 1; min-width: 0; }
+    .building-card-name { font-size: 14px; font-weight: 700; color: var(--navy,#042C53); margin: 0 0 2px; }
+    .building-card-desc { font-size: 11.5px; color: var(--muted,#5A7A96); margin: 0 0 6px; }
+    .building-card-meta { display: flex; gap: 6px; flex-wrap: wrap; }
     .building-meta-chip {
-      font-size: 11px; font-weight: 600; padding: 3px 9px;
-      border-radius: 20px; background: var(--navy-pale,#F4F8FD);
-      color: var(--navy,#042C53); border: 1px solid var(--border,#C8DFF0);
+      font-size: 10.5px; font-weight: 600; padding: 2px 8px;
+      border-radius: 20px; background: var(--navy-pale,#F8FAFB);
+      color: var(--navy,#042C53); border: 1px solid var(--border,#D7E1E8);
     }
     .building-card-arrow {
-      position: absolute; right: 1.1rem; top: 50%; transform: translateY(-50%);
-      font-size: 18px; color: var(--border,#C8DFF0); transition: color .15s, transform .15s;
+      font-size: 16px; color: var(--border,#D7E1E8);
+      transition: color .15s, transform .15s; flex-shrink: 0;
     }
     .building-card:hover .building-card-arrow {
-      color: var(--accent,#378ADD); transform: translateY(-50%) translateX(3px);
+      color: var(--muted,#5F7387); transform: translateX(3px);
     }
 
     /* ═══════════════════════════════════════════
@@ -480,37 +475,93 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     }
     .comlab-map-grid {
       flex: 1; position: relative;
-      background: #d9f0f0; border: 2px solid #173049;
+      background: #ffffff; border: 1px solid #c9d4dd;
       border-radius: 8px; padding: 10px; overflow: hidden; min-height: 0;
     }
-    .map-grid-hs { background: #ddf0ea; }
+    /* HS map grid — light blue background, navy tiles matching nav active */
+    .map-grid-hs { background: #e8f4fb; }
+    .map-grid-hs .comlab-tile {
+      background: linear-gradient(160deg, #042C53 0%, #0d3f73 100%);
+      border-color: #042C53;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(4,44,83,0.22);
+    }
+
+    /* Finance map grid — light green background, medium teal-green tiles */
+    .map-grid-finance { background: #eaf6f1; }
+    .map-grid-finance .comlab-tile {
+      background: #1a7a5e;
+      border-color: #156349;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(26,122,94,0.25);
+    }
 
     /* ── Tile base ── */
     .comlab-tile {
-      position: absolute; border: 2px solid #173049; border-radius: 6px;
+      position: absolute; border: 1px solid #c9d4dd; border-radius: 8px;
+      background: #fcfdfe;
       color: #0d1b2a; text-decoration: none; font-size: 13px; font-weight: 600;
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; text-align: center; padding: 4px 6px; gap: 2px;
-      transition: transform .12s, box-shadow .12s, opacity .2s, filter .2s;
+      transition: transform .15s, box-shadow .15s, opacity .2s, filter .2s;
       z-index: 3;
     }
-    .comlab-tile:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(4,44,83,.18); }
-    .comlab-tile.active { outline: 3px solid #185fa5; outline-offset: 1px; }
+    .comlab-tile:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(4,44,83,.28); }
+    /* Navy tiles: white ring + navy glow for active state */
+    .map-grid-hs .comlab-tile.active,
+    .map-grid-finance .comlab-tile.active {
+      outline: 3px solid #378ADD;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 5px rgba(55,138,221,0.35), 0 4px 14px rgba(4,44,83,.3);
+    }
+    .comlab-tile.active { outline: 2px solid #185FA5; outline-offset: 1px; }
 
-    .status-free { background: #e7f8f1; }
-    .status-busy { background: #fce9e9; }
-    .status-out  { background: #eee; color: #737373; }
+    /* Status overrides — HS (navy) */
+    .map-grid-hs .comlab-tile.status-busy {
+      background: linear-gradient(160deg, #7f1d1d 0%, #b91c1c 100%);
+      border-color: #7f1d1d;
+      box-shadow: 0 2px 8px rgba(127,29,29,0.28);
+    }
+    .map-grid-hs .comlab-tile.status-out {
+      background: linear-gradient(160deg, #2E3F4F 0%, #4a5568 100%);
+      border-color: #2E3F4F;
+      color: #cbd5e0;
+      box-shadow: 0 2px 8px rgba(46,63,79,0.22);
+    }
+    /* Status overrides — Finance (flat green) */
+    .map-grid-finance .comlab-tile.status-busy {
+      background: #7f1d1d;
+      border-color: #7f1d1d;
+      box-shadow: 0 2px 8px rgba(127,29,29,0.28);
+    }
+    .map-grid-finance .comlab-tile.status-out {
+      background: #2E3F4F;
+      border-color: #2E3F4F;
+      color: #cbd5e0;
+      box-shadow: 0 2px 8px rgba(46,63,79,0.22);
+    }
+
+    .status-free { background: #f8fbf9; }
+    .status-busy { background: #fbf7f7; }
+    .status-out  { background: #f2f4f6; color: #667789; }
 
     .tile-dim   { opacity: .28; filter: grayscale(60%); }
-    .tile-match { opacity: 1; filter: none; box-shadow: 0 0 0 3px #378ADD, 0 4px 16px rgba(55,138,221,.35); z-index: 10; }
+    .tile-match { opacity: 1; filter: none; box-shadow: 0 0 0 3px #fff, 0 0 0 5px #042C53, 0 4px 16px rgba(4,44,83,.38); z-index: 10; }
 
+    /* Badge on blue tiles — white semi-transparent pill */
+    .map-grid-hs .comlab-tile .tile-sched-badge,
+    .map-grid-finance .comlab-tile .tile-sched-badge {
+      background: rgba(255,255,255,0.25);
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.4);
+    }
     .tile-sched-badge {
       font-size: 10px; font-weight: 700;
       background: rgba(4,44,83,.12); border-radius: 10px;
       padding: 1px 6px; line-height: 1.4;
     }
     .tile-live-label {
-      font-size: 9px; font-weight: 700; opacity: .75;
+      font-size: 9px; font-weight: 700; opacity: .85;
       line-height: 1.2; text-align: center;
       max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
@@ -526,11 +577,11 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     }
     .legend-dot {
       width: 10px; height: 10px; border-radius: 50%;
-      display: inline-block; margin-right: 5px; border: 1px solid #17304933;
+      display: inline-block; margin-right: 5px; border: 1px solid #c9d4dd;
     }
-    .legend-available { background: #e7f8f1; }
-    .legend-occupied  { background: #fce9e9; }
-    .legend-out       { background: #eee; }
+    .legend-available { background: #f8fbf9; }
+    .legend-occupied  { background: #fbf7f7; }
+    .legend-out       { background: #f2f4f6; }
 
     .live-refresh-bar {
       display: flex; align-items: center; gap: 6px;
@@ -546,8 +597,8 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
     }
 
     .center-walkway {
-      position: absolute; border: 2px solid #173049;
-      background: #f3f3f3; border-radius: 4px;
+      position: absolute; border: 1px dashed #c9d4dd;
+      background: #f7f8f9; border-radius: 4px;
       font-weight: 600; color: #5a7a96;
       display: flex; align-items: center; justify-content: center;
       font-size: 12px; z-index: 1;
@@ -568,10 +619,10 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
 
     /* ── Per-building floor-view backgrounds ── */
     body.building-highschool .floor-view {
-      background: linear-gradient(135deg, #daeef9 0%, #c5e3f4 100%);
+      background: #ffffff;
     }
     body.building-finance .floor-view {
-      background: linear-gradient(135deg, #d4f0e8 0%, #bce5d8 100%);
+      background: #ffffff;
     }
   </style>
 </head>
@@ -701,59 +752,64 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
       <!-- Dark gradient overlay -->
       <div class="campus-map-overlay"></div>
 
-      <!-- Overlay content: heading + cards -->
+      <!-- Overlay content: 2-column grid -->
       <div class="campus-overlay-content">
 
-        <!-- ── Second campus map card (floating above cards) ── -->
-        <div class="campus-minimap-card">
-          <div class="campus-minimap-header">
-            <i class="bi bi-map" style="font-size:12px;"></i>
-            Campus Overview
-          </div>
-          <div class="campus-minimap-body">
-            <img src="includes/img/map.png"
-                 alt="BukSU Campus Map"
-                 style="width:100%;height:100%;object-fit:contain;display:block;border-radius:0 0 6px 6px;"
-                 loading="lazy">
+        <!-- LEFT: Campus map as spatial context -->
+        <div class="campus-map-panel">
+          <div class="campus-minimap-card">
+            <div class="campus-minimap-header">
+              <i class="bi bi-map" style="font-size:12px;"></i>
+              Campus Overview
+            </div>
+            <div class="campus-minimap-body">
+              <img src="includes/img/map.png"
+                   alt="BukSU Campus Map"
+                   style="width:100%;height:100%;object-fit:contain;display:block;border-radius:0 0 6px 6px;"
+                   loading="lazy">
+            </div>
           </div>
         </div>
-        <!-- ── End second campus map ── -->
+        <!-- END left panel -->
 
-        <div class="campus-heading">
-          <h2><i class="bi bi-geo-alt me-2"></i>Select a Building</h2>
-          <p>Click a building to view its computer laboratories</p>
-        </div>
+        <!-- RIGHT: Building selector -->
+        <div class="campus-selector-panel">
+          <div class="campus-heading">
+            <h2><i class="bi bi-geo-alt me-2"></i>Select a Building</h2>
+            <p>Click a building below to view its computer laboratories</p>
+          </div>
 
-      <div class="campus-buildings-grid">
-        <?php foreach ($buildings as $bKey => $bDef):
-          $cardClass  = $bKey === 'highschool' ? 'hs-card' : 'fin-card';
-          $roomCount  = count($bDef['rooms']);
-          $schedCount = $buildingSchedCount[$bKey];
-          $availCount = 0;
-          foreach ($bDef['rooms'] as $rn) {
-              $rd = $roomsByLabel[strtolower($rn)] ?? null;
-              if ($rd && $rd['status'] === 'available') $availCount++;
-          }
-        ?>
-        <a href="comlab-map.php?building=<?= $bKey ?>" class="building-card <?= $cardClass ?>">
-          <div class="building-card-icon">
-            <i class="bi <?= $bDef['icon'] ?>"></i>
-          </div>
-          <div class="building-card-body">
-            <p class="building-card-name"><?= htmlspecialchars($bDef['name']) ?></p>
-            <p class="building-card-desc"><?= htmlspecialchars($bDef['description']) ?></p>
-          </div>
-          <div class="building-card-meta">
-            <span class="building-meta-chip"><i class="bi bi-display me-1"></i><?= $roomCount ?> Rooms</span>
-            <span class="building-meta-chip"><i class="bi bi-check-circle me-1"></i><?= $availCount ?> Available</span>
-            <?php if ($schedCount > 0): ?>
-              <span class="building-meta-chip"><i class="bi bi-calendar3 me-1"></i><?= $schedCount ?> Schedules</span>
-            <?php endif; ?>
-          </div>
-          <i class="bi bi-chevron-right building-card-arrow"></i>
-        </a>
-        <?php endforeach; ?>
-        </div><!-- /.campus-buildings-grid -->
+          <div class="campus-buildings-grid">
+            <?php foreach ($buildings as $bKey => $bDef):
+              $cardClass  = $bKey === 'highschool' ? 'hs-card' : 'fin-card';
+              $roomCount  = count($bDef['rooms']);
+              $schedCount = $buildingSchedCount[$bKey];
+              $availCount = 0;
+              foreach ($bDef['rooms'] as $rn) {
+                  $rd = $roomsByLabel[strtolower($rn)] ?? null;
+                  if ($rd && $rd['status'] === 'available') $availCount++;
+              }
+            ?>
+            <a href="comlab-map.php?building=<?= $bKey ?>" class="building-card <?= $cardClass ?>">
+              <div class="building-card-icon">
+                <i class="bi <?= $bDef['icon'] ?>"></i>
+              </div>
+              <div class="building-card-body">
+                <p class="building-card-name"><?= htmlspecialchars($bDef['name']) ?></p>
+                <p class="building-card-desc"><?= htmlspecialchars($bDef['description']) ?></p>
+                <div class="building-card-meta">
+                  <span class="building-meta-chip"><i class="bi bi-display me-1"></i><?= $roomCount ?> Rooms</span>
+                  <span class="building-meta-chip"><i class="bi bi-check-circle me-1"></i><?= $availCount ?> Available</span>
+                  <?php if ($schedCount > 0): ?>
+                    <span class="building-meta-chip"><i class="bi bi-calendar3 me-1"></i><?= $schedCount ?> Schedules</span>
+                  <?php endif; ?>
+                </div>
+              </div>
+              <i class="bi bi-chevron-right building-card-arrow"></i>
+            </a>
+            <?php endforeach; ?>
+          </div><!-- /.campus-buildings-grid -->
+        </div><!-- /.campus-selector-panel -->
 
       </div><!-- /.campus-overlay-content -->
     </main>
@@ -778,7 +834,7 @@ $allSchedulesJson = json_encode($allSchedulesForSearch);
           <?= htmlspecialchars($currentBuildingDef['name']) ?> — Floor Map
         </span>
 
-        <div class="comlab-map-grid <?= $selectedBuilding === 'highschool' ? 'map-grid-hs' : '' ?>" id="comlabMapGrid">
+        <div class="comlab-map-grid <?= $selectedBuilding === 'highschool' ? 'map-grid-hs' : ($selectedBuilding === 'finance' ? 'map-grid-finance' : '') ?>" id="comlabMapGrid">
 
           <?php foreach ($currentLayout as $layout):
             $label    = strtolower($layout['label']);

@@ -6,15 +6,15 @@
 /* ── CSS VARIABLES ────────────────────────────── */
 :root {
   --navy:       #042C53;
-  --navy-mid:   #185FA5;
-  --navy-light: #EBF3FB;
-  --navy-pale:  #F4F8FD;
+  --navy-mid:   #2E3F4F;
+  --navy-light: #EDF2F5;
+  --navy-pale:  #F8FAFB;
   --accent:     #378ADD;
   --success:    #1D9E75;
   --warn:       #BA7517;
   --text:       #0D1B2A;
-  --muted:      #5A7A96;
-  --border:     #C8DFF0;
+  --muted:      #5F7387;
+  --border:     #D7E1E8;
   --white:      #ffffff;
   --radius-sm:  6px;
   --radius-md:  10px;

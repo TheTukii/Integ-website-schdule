@@ -11,6 +11,12 @@
   max-width: 100%;
 }
 
+:root {
+  --danger-text: #B92D2C;
+  --danger-border: #F1C9C9;
+  --danger-bg: #FDF1F1;
+}
+
 /* Page header */
 .settings-header {
   display: flex;
@@ -188,6 +194,16 @@
   background: rgba(55,138,221,0.08);
 }
 
+.settings-avatar-info .upload-btn:focus-visible,
+.btn-save:focus-visible,
+.btn-cancel:focus-visible,
+.btn-danger:focus-visible,
+.toggle-switch input:focus-visible + .toggle-slider {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
 /* ── TOGGLE SWITCH ────────────────────────────── */
 .settings-toggle-row {
   display: flex;
@@ -314,15 +330,15 @@
 
 /* Danger zone */
 .settings-card.danger {
-  border-color: #F3CBCB;
+  border-color: var(--danger-border);
 }
 
 .settings-card.danger .settings-card-header {
-  border-bottom-color: #F3CBCB;
+  border-bottom-color: var(--danger-border);
 }
 
 .settings-card.danger .settings-card-header i {
-  color: #D33;
+  color: var(--danger-text);
 }
 
 .btn-danger {
@@ -333,17 +349,17 @@
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
   font-weight: 600;
-  color: #D33;
+  color: var(--danger-text);
   background: var(--white);
-  border: 1px solid #F3CBCB;
+  border: 1px solid var(--danger-border);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 
 .btn-danger:hover {
-  background: #FDF0F0;
-  color: #B22;
+  background: var(--danger-bg);
+  color: #9E2524;
 }
 
 /* ── RESPONSIVE ───────────────────────────────── */

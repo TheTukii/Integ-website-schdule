@@ -1,18 +1,32 @@
+:root {
+    --navy: #042C53;
+    --navy-mid: #2E3F4F;
+    --navy-light: #EDF2F5;
+    --navy-pale: #F8FAFB;
+    --text: #0D1B2A;
+    --border: #D7E1E8;
+    --white: #ffffff;
+}
+
 body {
     margin: 0;
-    height: 100vh;
-    background-color:#ffffff;
+    min-height: 100vh;
+    background-color: var(--navy-pale);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
 }
 
 .layout {
     display: flex;
-    height: 85vh;
+    min-height: 85vh;
     align-items: center;
+    gap: 1rem;
 }
 
 .layout-top {
     display: flex;
     align-items: center;
+    gap: 1rem;
 }
 
 .main {
@@ -20,65 +34,64 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 1rem;
 }
 
 .buksu-map img {
-    height: 50rem;
-    width: 50rem;
+    max-height: min(50rem, 78vh);
+    max-width: min(50rem, 100%);
 }
 
 .card {
-    margin: 0%;
-    height: 50px;
+    margin: 0;
+    min-height: 50px;
     width: 300px;
 }
 
 .card-dashboard {
-    margin: 0%;
+    margin: 0;
     width: 23rem;
-    height: 35rem;
-    background-color: #ffffff;
-    display: flex; 
-    justify-content: center; 
+    min-height: 35rem;
+    background-color: var(--white);
+    display: flex;
+    justify-content: center;
     align-items: center;
-    border-radius: 5px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 16px rgba(4, 44, 83, 0.08);
+}
 
+.card-dashboard-sidebar-left,
+.card-dashboard-sidebar-right {
+    margin: 0;
+    height: 50rem;
+    background-color: var(--white);
+    display: flex;
+    justify-content: left;
+    border-radius: 15px;
+    border: 1px solid var(--border);
+    box-shadow: 0 3px 14px rgba(4, 44, 83, 0.06);
 }
 
 .card-dashboard-sidebar-left {
-    margin: 0%;
     width: 20rem;
-    height: 50rem;
-    background-color: #EBF3FB;
-    display: flex;  
-    justify-content: left; 
-    border-radius: 15px;
-    margin-left: .5rem;
-    border: solid 1.5px #042C53
-
+    margin-left: 0.5rem;
 }
 
 .card-dashboard-sidebar-right {
-    margin: 0%;
     width: 23rem;
-    height: 50rem;
-    background-color: #EBF3FB;
-    display: flex; 
-    justify-content: left; 
-    border-radius: 15px;
-    margin-right: .5rem;
-    border: solid 1.5px #042C53
-
+    margin-right: 0.5rem;
 }
 
 .card-dashboard-topbar {
-    margin: 0%;
+    margin: 0;
     width: 118rem;
-    height: 6rem;
-    background-color: #EBF3FB;
-    display: flex; 
+    min-height: 6rem;
+    background-color: var(--white);
+    display: flex;
     border-radius: 15px;
-    border: solid 1.5px #042C53
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 10px rgba(4, 44, 83, 0.06);
 }
 
 .buksu-map {
